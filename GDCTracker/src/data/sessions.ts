@@ -967,14 +967,14 @@ export const sessions: Session[] = [
     id: 'fri-014',
     title: "Thriving Players Workshop",
     description: "Workshop identifying common risks or roadblocks to prosocial interaction in games, with practical strategies for healthier player communities.",
-    speakers: ['Weszt Hart (Riot Games)', 'Natasha Miller (Blizzard Entertainment)'],
-    track: 'Design',
+    speakers: ['Natasha Miller (Blizzard)', 'Matthew Soeth (Thriving in Games Group)', 'Weszt Hart (Riot Games)', 'Josh Chapdelaine (Thriving in Games Group)', 'Ariana Barcenas Kanemoto (Blizzard)'],
+    track: 'Culture & Sustainability',
     format: 'Workshop',
-    day: 'Fri',
-    startTime: '13:50',
-    endTime: '15:50',
-    room: 'Room 3011, West Hall',
-    tags: ['player behavior', 'prosocial', 'community', 'Riot', 'Blizzard', 'toxicity'],
+    day: 'Tue',
+    startTime: '10:30',
+    endTime: '12:30',
+    room: 'Room 2014, West Hall',
+    tags: ['player behavior', 'prosocial', 'community', 'Riot', 'Blizzard', 'trust', 'engagement'],
   },
   {
     id: 'fri-015',
@@ -1372,16 +1372,16 @@ export const sessions: Session[] = [
 
   // Ghost of Yotei - Combat Design
   {
-    id: 'thu-030',
-    title: "Ghost of Yotei: Iterating and Expanding the Combat System",
+    id: 'wed-040',
+    title: "Honing the Blade: Evolving Combat for Ghost of Yotei",
     description: "How Sucker Punch iterated on Ghost of Tsushima's combat system to make Ghost of Yotei feel fresh yet familiar, covering new mechanics, player feedback loops, and animation work.",
     speakers: ['Theodore Fishman (Sucker Punch Productions)'],
     track: 'Design',
     format: 'Lecture',
-    day: 'Thu',
-    startTime: '14:00',
-    endTime: '15:00',
-    room: 'Room 2022, West Hall',
+    day: 'Wed',
+    startTime: '16:30',
+    endTime: '17:30',
+    room: 'Room 2005, West Hall',
     tags: ['Sucker Punch', 'Ghost of Yotei', 'combat', 'game design', 'PlayStation', 'action'],
   },
 
@@ -1623,5 +1623,187 @@ export const sessions: Session[] = [
     endTime: '11:30',
     room: 'Blue Shield of California Theater, Yerba Buena Center',
     tags: ['Tencent', 'AI', 'technology', 'strategy', 'luminaries', 'production pipeline'],
+  },
+
+  // === ADDITIONAL SESSIONS FROM AGENT 3 ===
+
+  // Blizzard - Overwatch Stadium
+  {
+    id: 'tue-031',
+    title: "Designing Stadium: Crafting a New Game Mode for Overwatch",
+    description: "How Blizzard designed and iterated on the new Stadium game mode for Overwatch, covering prototyping, playtesting, and player feedback integration.",
+    speakers: ['Scott Hwang (Blizzard)', 'Larry Wu (Blizzard)'],
+    track: 'Design',
+    format: 'Lecture',
+    day: 'Tue',
+    startTime: '13:50',
+    endTime: '14:50',
+    room: 'Room 2005, West Hall',
+    tags: ['Blizzard', 'Overwatch', 'game mode', 'design', 'multiplayer', 'PvP'],
+  },
+
+  // King - Candy Crush Soda Saga UX
+  {
+    id: 'tue-032',
+    title: "The Invisible Layer: Redesigning Communication and Navigation in Candy Crush Soda Saga",
+    description: "How King redesigned the UX communication and navigation layers in Candy Crush Soda Saga to improve player understanding and engagement.",
+    speakers: ['Liza Dobrovoljc (King)'],
+    track: 'Design',
+    format: 'Lecture',
+    day: 'Tue',
+    startTime: '16:20',
+    endTime: '17:20',
+    room: 'Room 2010, West Hall',
+    tags: ['King', 'Candy Crush', 'UX', 'navigation', 'mobile', 'communication', 'redesign'],
+  },
+
+  // NetEase - AI TikTok creators
+  {
+    id: 'thu-036',
+    title: "Short Form Futures: How AI Turned MMO Players into TikTok Creators",
+    description: "How NetEase used AI tools to enable MMO players to create short-form video content, bridging gaming and social media content creation.",
+    speakers: ['Chang Liu (NetEase)'],
+    track: 'Game & Production Technology',
+    format: 'Power Talk',
+    day: 'Thu',
+    startTime: '11:50',
+    endTime: '12:20',
+    room: 'Room 3004, West Hall',
+    tags: ['NetEase', 'AI', 'content creation', 'TikTok', 'MMO', 'social media', 'UGC'],
+  },
+
+  // Ghost of Yotei - Audio
+  {
+    id: 'thu-037',
+    title: "How Ghost of Yotei Was Pre-Mixed with the Help of a Sound Sensei",
+    description: "Sucker Punch's audio team reveals their innovative pre-mixing approach for Ghost of Yotei, using AI-assisted tools to achieve cinematic audio quality across the open world.",
+    speakers: ['Grey Davenport (Sucker Punch Productions)'],
+    track: 'Audio',
+    format: 'Lecture',
+    day: 'Thu',
+    startTime: '13:40',
+    endTime: '14:40',
+    room: 'Room 2003, West Hall',
+    tags: ['Sucker Punch', 'Ghost of Yotei', 'audio', 'sound design', 'pre-mix', 'PlayStation'],
+  },
+
+  // Blizzard - Diffusion model map gen
+  {
+    id: 'fri-020a',
+    title: "Zenith: Diffusion Model Driven Map Generation",
+    description: "Blizzard Entertainment presents Zenith, a diffusion model-driven approach to procedural map generation, enabling rapid creation of game-ready environments.",
+    speakers: ['Zhen Zhai (Blizzard Entertainment)'],
+    track: 'Game & Production Technology',
+    format: 'Power Talk',
+    day: 'Fri',
+    startTime: '11:40',
+    endTime: '12:10',
+    room: 'Room 2010, West Hall',
+    tags: ['Blizzard', 'AI', 'diffusion model', 'procedural generation', 'map generation', 'machine learning'],
+  },
+
+  // Blizzard - Overwatch lessons learned
+  {
+    id: 'fri-021',
+    title: "Lessons Learned in Running a Game the Hard Way: How Blizzard Revitalized Overwatch",
+    description: "Aaron Keller shares the hard-won lessons from revitalizing Overwatch, covering the transition challenges, community response, and what it took to rebuild player trust.",
+    speakers: ['Aaron Keller (Blizzard Entertainment)'],
+    track: 'Production',
+    format: 'Lecture',
+    day: 'Fri',
+    startTime: '13:10',
+    endTime: '14:10',
+    room: 'Room 2005, West Hall',
+    tags: ['Blizzard', 'Overwatch', 'live service', 'production', 'leadership', 'postmortem'],
+  },
+
+  // Indiana Jones cultural world building
+  {
+    id: 'wed-041',
+    title: "Building the Cultural World of Indiana Jones and the Great Circle",
+    description: "How cultural consulting shaped the world-building in Indiana Jones and the Great Circle, ensuring authentic and respectful representation of diverse cultures.",
+    speakers: ['Kate Edwards (Geogrify/SetJetters)'],
+    track: 'Culture & Sustainability',
+    format: 'Lecture',
+    day: 'Wed',
+    startTime: '16:30',
+    endTime: '17:30',
+    room: 'Room 210, West Hall',
+    tags: ['MachineGames', 'Indiana Jones', 'cultural consulting', 'world building', 'representation'],
+  },
+
+  // NVIDIA - Path-traced hair and skin
+  {
+    id: 'thu-038',
+    title: "Manicured Characters: Path-Traced Hair and Skin in AAA Games",
+    description: "Deep dive into RTX Hair and RTX Skin technology used in Indiana Jones and the Great Circle, covering strand-based hair rendering and subsurface scattering for realistic character rendering.",
+    speakers: ['Di Lu (NVIDIA)', 'Alexey Bekin (NVIDIA)'],
+    track: 'Game & Production Technology',
+    format: 'Lecture',
+    day: 'Thu',
+    startTime: '14:00',
+    endTime: '15:00',
+    room: 'Room 3020, West Hall',
+    tags: ['NVIDIA', 'RTX', 'hair rendering', 'skin', 'ray tracing', 'character rendering', 'Indiana Jones'],
+  },
+
+  // Game AI Fireside Chat
+  {
+    id: 'wed-042',
+    title: "Game AI Fireside Chat: Celebrating 20+ Years of Behavior Trees and Automated Planning",
+    description: "A fireside chat celebrating over 20 years of behavior trees and automated planning in game AI, with two pioneers reflecting on the past and future of game AI.",
+    speakers: ['Damian Isla', 'Jeff Orkin'],
+    track: 'Game & Production Technology',
+    format: 'Fireside Chat',
+    day: 'Wed',
+    startTime: '15:30',
+    endTime: '16:30',
+    room: 'Room 3004, West Hall',
+    tags: ['game AI', 'behavior trees', 'automated planning', 'AI history', 'fireside chat'],
+  },
+
+  // Player Hearing Safety
+  {
+    id: 'wed-043',
+    title: "Player Hearing Safety: Accessibility's Close Cousin",
+    description: "How games can protect player hearing through responsible audio design, covering loudness standards, dynamic range management, and the relationship between hearing safety and accessibility.",
+    speakers: ['Brian Schmidt'],
+    track: 'Audio',
+    format: 'Power Talk',
+    day: 'Wed',
+    startTime: '15:00',
+    endTime: '15:30',
+    room: 'Room 3018, West Hall',
+    tags: ['audio', 'hearing safety', 'accessibility', 'loudness', 'health', 'player welfare'],
+  },
+
+  // Press Start - Xbox porting
+  {
+    id: 'wed-044',
+    title: "Press Start: Get Your PC Game Ready for Xbox in One Day",
+    description: "A practical guide to porting PC games to Xbox quickly, covering the GDK, certification requirements, and common pitfalls with solutions.",
+    speakers: ['Travis Bradshaw (Microsoft)', 'Andy McCalib (Microsoft)'],
+    track: 'Game & Production Technology',
+    format: 'Lecture',
+    day: 'Wed',
+    startTime: '12:45',
+    endTime: '13:45',
+    room: 'Room 3001, West Hall',
+    tags: ['Microsoft', 'Xbox', 'porting', 'PC', 'GDK', 'certification', 'cross-platform'],
+  },
+
+  // NVIDIA - Neural Shaders practical
+  {
+    id: 'thu-039',
+    title: "How to Build Practical Applications Powered by Neural Shaders",
+    description: "Practical guide to building applications using NVIDIA's neural shader technology, covering integration patterns, performance considerations, and real-world use cases.",
+    speakers: ['Martin Stich (NVIDIA)', 'Carmelo Fernandez-Aguera (NVIDIA)'],
+    track: 'Game & Production Technology',
+    format: 'Lecture',
+    day: 'Thu',
+    startTime: '12:45',
+    endTime: '13:45',
+    room: 'Room 3020, West Hall',
+    tags: ['NVIDIA', 'neural shaders', 'RTX', 'AI', 'rendering', 'practical', 'integration'],
   },
 ]
