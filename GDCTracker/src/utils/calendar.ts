@@ -1,11 +1,11 @@
 import { Session, Day } from '../types'
 
 const DAY_DATES: Record<Day, string> = {
-  Mon: '20260316',
-  Tue: '20260317',
-  Wed: '20260318',
-  Thu: '20260319',
-  Fri: '20260320',
+  Mon: '20260309',
+  Tue: '20260310',
+  Wed: '20260311',
+  Thu: '20260312',
+  Fri: '20260313',
 }
 
 function toICSDateTime(day: Day, time: string): string {

@@ -19,7 +19,7 @@ export function ClaudeAssistant({ sessions, userData }: Props) {
   const interestedSessions = sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0)
 
   const generateContext = (): string => {
-    let context = `# GDC 2026 Schedule Assistant\n\nI'm planning my GDC 2026 week (March 16-20, San Francisco). Help me optimize my schedule.\n\n`
+    let context = `# GDC 2026 Schedule Assistant\n\nI'm planning my GDC 2026 week (March 9-13, San Francisco). Help me optimize my schedule.\n\n`
 
     if (contextMode === 'full_schedule') {
       context += `## My Current Schedule (${scheduledSessions.length} sessions)\n\n`

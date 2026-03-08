@@ -75,7 +75,7 @@ export default function App() {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <h1 className="text-base font-bold">GDC 2026</h1>
-              <span className="text-xs text-gdc-textMuted hidden sm:inline">March 16-20 | San Francisco</span>
+              <span className="text-xs text-gdc-textMuted hidden sm:inline">March 9-13 | San Francisco</span>
             </div>
             {scheduledCount > 0 && (
               <span className="text-xs bg-gdc-accent/20 text-gdc-accent px-2 py-0.5 rounded-full">
