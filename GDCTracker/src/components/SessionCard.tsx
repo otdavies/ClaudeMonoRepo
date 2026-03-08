@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react'
 import { Session, UserSessionData, TRACK_COLORS, InterestLevel } from '../types'
 import { formatTimeRange, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
@@ -12,17 +13,21 @@ interface Props {
   onToggleExpand: (id: string) => void
 }
 
-export function SessionCard({ session, userData, onUpdateUserData, conflicts, expanded, onToggleExpand }: Props) {
+const DEFAULT_USER_DATA: UserSessionData = { interest: 0, scheduled: false, notes: '' }
+
+export const SessionCard = memo(function SessionCard({ session, userData, onUpdateUserData, conflicts, expanded, onToggleExpand }: Props) {
   const duration = getDurationMinutes(session.startTime, session.endTime)
   const hasConflicts = conflicts.length > 0
   const trackColor = TRACK_COLORS[session.track]
+
+  const handleClick = useCallback(() => onToggleExpand(session.id), [onToggleExpand, session.id])
 
   return (
     <div
       className={`card p-3 transition-all duration-150 cursor-pointer ${
         userData.scheduled ? 'ring-1 ring-gdc-accent/50 bg-gdc-accent/5' : ''
       } ${hasConflicts && userData.scheduled ? 'ring-1 ring-gdc-danger/50' : ''}`}
-      onClick={() => onToggleExpand(session.id)}
+      onClick={handleClick}
     >
       {/* Top row: time + track + interest */}
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -125,4 +130,6 @@ export function SessionCard({ session, userData, onUpdateUserData, conflicts, ex
       )}
     </div>
   )
-}
+})
+
+export { DEFAULT_USER_DATA }

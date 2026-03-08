@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { sessions as allSessions } from './data/sessions'
 import { FilterState, UserSessionData, ViewMode, InterestLevel } from './types'
 import { applyFilters, sortSessions } from './utils/filters'
@@ -20,11 +20,24 @@ const DEFAULT_FILTERS: FilterState = {
   timeRange: null,
 }
 
+// Debounce hook for search input
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+  return debounced
+}
+
 export default function App() {
   const [view, setView] = useState<ViewMode>('browse')
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [sortBy, setSortBy] = useState<'time' | 'track' | 'interest'>('time')
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
+
+  // Debounce the search string to avoid re-filtering on every keystroke
+  const debouncedSearch = useDebouncedValue(filters.search, 150)
 
   const updateUserData = useCallback((id: string, partial: Partial<UserSessionData>) => {
     setUserData(prev => ({
@@ -48,24 +61,37 @@ export default function App() {
     [scheduledSessions]
   )
 
-  // Apply filters
-  const filteredSessions = useMemo(() => {
-    let result = applyFilters(allSessions, filters)
+  // Use debounced search for filtering
+  const debouncedFilters = useMemo(
+    () => ({ ...filters, search: debouncedSearch }),
+    [filters, debouncedSearch]
+  )
 
-    // Interest filter
+  // Apply pure filters first (no userData dependency)
+  const baseFilteredSessions = useMemo(
+    () => applyFilters(allSessions, debouncedFilters),
+    [debouncedFilters]
+  )
+
+  // Apply userData-dependent filters and sorting only when needed
+  const filteredSessions = useMemo(() => {
+    let result = baseFilteredSessions
+
     if (filters.interestMin > 0) {
       result = result.filter(s => (userData[s.id]?.interest ?? 0) >= filters.interestMin)
     }
 
-    // Scheduled only
     if (filters.scheduledOnly) {
       result = result.filter(s => userData[s.id]?.scheduled)
     }
 
     return sortSessions(result, sortBy, userData)
-  }, [filters, sortBy, userData])
+  }, [baseFilteredSessions, filters.interestMin, filters.scheduledOnly, sortBy, userData])
 
-  const scheduledCount = Object.values(userData).filter(d => d.scheduled).length
+  const scheduledCount = useMemo(
+    () => Object.values(userData).filter(d => d.scheduled).length,
+    [userData]
+  )
 
   return (
     <div className="min-h-screen flex flex-col">
