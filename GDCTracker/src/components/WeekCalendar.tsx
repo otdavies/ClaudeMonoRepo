@@ -1,4 +1,7 @@
-import { Session, UserSessionData, Day, ALL_DAYS, DAY_LABELS, TRACK_COLORS } from '../types'
+import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS } from '../types'
+
+// Calendar grid only shows confirmed days, not TBD
+const CALENDAR_DAYS: Day[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 import { formatTime, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
 import { downloadICS } from '../utils/calendar'
 
@@ -17,7 +20,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i)
 
   const scheduledByDay = new Map<Day, Session[]>()
-  for (const day of ALL_DAYS) {
+  for (const day of CALENDAR_DAYS) {
     scheduledByDay.set(day, sessions.filter(s => s.day === day).sort((a, b) => a.startTime.localeCompare(b.startTime)))
   }
 
@@ -33,7 +36,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
           {totalConflicts > 0 && (
             <span className="text-gdc-danger">{totalConflicts} conflicts</span>
           )}
-          {ALL_DAYS.map(day => {
+          {CALENDAR_DAYS.map(day => {
             const count = scheduledByDay.get(day)?.length ?? 0
             return count > 0 ? (
               <span key={day} className="hidden sm:inline">{day}: {count}</span>
@@ -59,7 +62,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
           {/* Day headers */}
           <div className="grid grid-cols-[3rem_repeat(5,1fr)] gap-px mb-1">
             <div />
-            {ALL_DAYS.map(day => {
+            {CALENDAR_DAYS.map(day => {
               const count = scheduledByDay.get(day)?.length ?? 0
               return (
                 <div key={day} className="text-center py-1">
@@ -90,7 +93,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
             </div>
 
             {/* Day columns */}
-            {ALL_DAYS.map(day => (
+            {CALENDAR_DAYS.map(day => (
               <div key={day} className="relative bg-gdc-surface/30 rounded">
                 {/* Hour lines */}
                 {hours.map(h => (

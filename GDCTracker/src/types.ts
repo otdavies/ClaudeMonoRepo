@@ -27,8 +27,9 @@ export type SessionFormat =
   | 'Microtalks'
   | 'Power Talk'
   | 'Special Event'
+  | 'Partner Developer Summit'
 
-export type Day = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri'
+export type Day = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'TBD'
 
 export interface Session {
   id: string
@@ -98,6 +99,7 @@ export const DAY_LABELS: Record<Day, string> = {
   'Wed': 'Wednesday 3/11',
   'Thu': 'Thursday 3/12',
   'Fri': 'Friday 3/13',
+  'TBD': 'TBD',
 }
 
 export const ALL_TRACKS: Track[] = [
@@ -111,6 +113,7 @@ export const ALL_TRACKS: Track[] = [
 export const ALL_FORMATS: SessionFormat[] = [
   'Lecture', 'Panel', 'Workshop', 'Roundtable', 'Fireside Chat',
   'Forum', 'Keynote', 'Microtalks', 'Power Talk', 'Special Event',
+  'Partner Developer Summit',
 ]
 
-export const ALL_DAYS: Day[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+export const ALL_DAYS: Day[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'TBD']

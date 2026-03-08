@@ -44,17 +44,21 @@ export function SessionList({ sessions, userData, onUpdateUserData, conflictMap,
     )
   }
 
-  // Group by day
+  // Group by day, maintaining day order
+  const dayOrder: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, TBD: 5 }
   const groups = new Map<Day, Session[]>()
   for (const s of sessions) {
     const list = groups.get(s.day) ?? []
     list.push(s)
     groups.set(s.day, list)
   }
+  const sortedEntries = Array.from(groups.entries()).sort(
+    ([a], [b]) => (dayOrder[a] ?? 5) - (dayOrder[b] ?? 5)
+  )
 
   return (
     <div className="space-y-4">
-      {Array.from(groups.entries()).map(([day, daySessions]) => (
+      {sortedEntries.map(([day, daySessions]) => (
         <div key={day}>
           <div className="sticky top-0 z-10 bg-gdc-bg/95 backdrop-blur-sm py-1 mb-2">
             <h2 className="text-sm font-semibold text-gdc-accent">{DAY_LABELS[day]}</h2>

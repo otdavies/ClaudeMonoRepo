@@ -23,6 +23,7 @@ export function applyFilters(sessions: Session[], filters: FilterState): Session
     if (filters.days.length > 0 && !filters.days.includes(s.day)) return false
 
     if (filters.timeRange) {
+      if (s.startTime === 'TBD' || s.endTime === 'TBD') return false
       if (s.startTime < filters.timeRange.start || s.endTime > filters.timeRange.end) return false
     }
 
@@ -31,7 +32,7 @@ export function applyFilters(sessions: Session[], filters: FilterState): Session
 }
 
 export function sortSessions(sessions: Session[], sortBy: 'time' | 'track' | 'interest', userData: Record<string, { interest: number }>): Session[] {
-  const dayOrder = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4 }
+  const dayOrder: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, TBD: 5 }
   return [...sessions].sort((a, b) => {
     if (sortBy === 'interest') {
       const ia = userData[a.id]?.interest ?? 0

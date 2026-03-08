@@ -6,6 +6,7 @@ const DAY_DATES: Record<Day, string> = {
   Wed: '20260311',
   Thu: '20260312',
   Fri: '20260313',
+  TBD: '20260309', // Fallback for unscheduled sessions
 }
 
 function toICSDateTime(day: Day, time: string): string {
@@ -51,7 +52,9 @@ export function generateICS(sessions: Session[]): string {
     'END:VTIMEZONE',
   ]
 
-  for (const session of sessions) {
+  // Skip sessions without confirmed day/time
+  const exportable = sessions.filter(s => s.day !== 'TBD' && s.startTime !== 'TBD')
+  for (const session of exportable) {
     lines.push(
       'BEGIN:VEVENT',
       `UID:${generateUID(session)}`,
