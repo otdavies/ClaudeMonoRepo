@@ -293,6 +293,8 @@ console.log(`Reading CSV from: ${csvPath}`)
 let csvText
 try {
   csvText = readFileSync(csvPath, 'utf-8')
+  // Strip BOM if present
+  if (csvText.charCodeAt(0) === 0xFEFF) csvText = csvText.slice(1)
 } catch (e) {
   console.error(`Error: Could not read ${csvPath}`)
   console.error('Usage: node scripts/import-csv.mjs [path-to-schedule.csv]')
@@ -300,7 +302,7 @@ try {
 }
 
 const rows = parseCSV(csvText)
-const headers = rows[0].map(h => h.toLowerCase().trim())
+const headers = rows[0].map(h => h.toLowerCase().trim().replace(/^"+|"+$/g, ''))
 console.log(`Found ${rows.length - 1} data rows`)
 console.log(`Headers: ${headers.join(', ')}`)
 
