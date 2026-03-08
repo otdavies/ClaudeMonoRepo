@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { InterestLevel } from '../types'
 
 const LABELS = ['', 'Maybe', 'Want', 'Must']
@@ -8,7 +9,7 @@ interface Props {
   compact?: boolean
 }
 
-export function InterestRating({ level, onChange, compact }: Props) {
+export const InterestRating = memo(function InterestRating({ level, onChange, compact }: Props) {
   return (
     <div className="flex items-center gap-0.5">
       {([1, 2, 3] as const).map(n => (
@@ -38,4 +39,4 @@ export function InterestRating({ level, onChange, compact }: Props) {
       )}
     </div>
   )
-}
+})

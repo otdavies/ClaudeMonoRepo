@@ -22,9 +22,14 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
 
   const handleClick = useCallback(() => onToggleExpand(session.id), [onToggleExpand, session.id])
 
+  const handleInterestChange = useCallback(
+    (v: InterestLevel) => onUpdateUserData(session.id, { interest: v }),
+    [onUpdateUserData, session.id]
+  )
+
   return (
     <div
-      className={`card p-3 transition-all duration-150 cursor-pointer ${
+      className={`card p-3 transition-shadow duration-150 cursor-pointer ${
         userData.scheduled ? 'ring-1 ring-gdc-accent/50 bg-gdc-accent/5' : ''
       } ${hasConflicts && userData.scheduled ? 'ring-1 ring-gdc-danger/50' : ''}`}
       onClick={handleClick}
@@ -42,7 +47,7 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
         </div>
         <InterestRating
           level={userData.interest}
-          onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
+          onChange={handleInterestChange}
           compact
         />
       </div>

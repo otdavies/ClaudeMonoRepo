@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, startTransition } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS } from '../types'
 import { SessionCard, DEFAULT_USER_DATA } from './SessionCard'
 
@@ -19,7 +19,9 @@ export function SessionList({ sessions, userData, onUpdateUserData, conflictMap,
   const sentinelRef = useRef<HTMLDivElement>(null)
 
   const toggleExpand = useCallback((id: string) => {
-    setExpandedId(prev => prev === id ? null : id)
+    startTransition(() => {
+      setExpandedId(prev => prev === id ? null : id)
+    })
   }, [])
 
   // Reset visible count when sessions change (new filter applied)

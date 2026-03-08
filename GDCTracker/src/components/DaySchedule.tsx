@@ -61,7 +61,7 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
               <div
                 key={session.id}
                 className={`absolute rounded-md p-1.5 text-xs overflow-hidden cursor-pointer
-                  transition-all hover:brightness-110 border-l-3
+                  hover:brightness-110 border-l-3
                   ${hasConflict ? 'bg-red-500/10 border-red-500' : `bg-gdc-surface ${borderColorClass}`}`}
                 style={{
                   top,

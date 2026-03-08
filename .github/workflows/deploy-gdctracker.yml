@@ -2,7 +2,7 @@ name: Deploy GDCTracker to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/create-gdctracker-app-mDBtk']
     paths: ['GDCTracker/**']
   workflow_dispatch:
 

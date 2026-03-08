@@ -118,7 +118,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
                     <div
                       key={session.id}
                       className={`absolute left-0.5 right-0.5 rounded p-1 text-[10px] leading-tight
-                        cursor-pointer overflow-hidden transition-all hover:brightness-125
+                        cursor-pointer overflow-hidden hover:brightness-125
                         ${hasConflict ? 'bg-red-500/20 ring-1 ring-red-500/50' : bgClass}`}
                       style={{ top, height }}
                       onClick={() => onSelectSession(session.id)}
