@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply antialiased;
+    overscroll-behavior: none;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gdc-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gdc-textMuted;
+  }
+}
+
+@layer components {
+  .track-badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap;
+  }
+
+  .btn {
+    @apply px-3 py-1.5 rounded-md font-medium text-sm transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-gdc-accent focus:ring-offset-1 focus:ring-offset-gdc-bg;
+  }
+
+  .btn-primary {
+    @apply btn bg-gdc-accent text-white hover:bg-gdc-accentHover active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply btn text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover active:scale-95;
+  }
+
+  .btn-danger {
+    @apply btn bg-red-500/20 text-red-400 hover:bg-red-500/30 active:scale-95;
+  }
+
+  .input {
+    @apply w-full bg-gdc-surface border border-gdc-border rounded-md px-3 py-2 text-sm
+           text-gdc-text placeholder-gdc-textMuted
+           focus:outline-none focus:ring-2 focus:ring-gdc-accent focus:border-transparent;
+  }
+
+  .card {
+    @apply bg-gdc-surface border border-gdc-border rounded-lg;
+  }
+
+  .session-time {
+    @apply font-mono text-xs;
+  }
+
+  .star-btn {
+    @apply transition-all duration-150 cursor-pointer hover:scale-110 active:scale-95;
+  }
+
+  .calendar-slot {
+    @apply border-l-2 rounded-r-md px-2 py-1 text-xs cursor-pointer
+           transition-all duration-150 hover:brightness-110;
+  }
+
+  .tab {
+    @apply px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150;
+  }
+
+  .tab-active {
+    @apply tab bg-gdc-accent text-white;
+  }
+
+  .tab-inactive {
+    @apply tab text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover;
+  }
+
+  .conflict-pulse {
+    animation: pulse-conflict 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-conflict {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+}
