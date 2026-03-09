@@ -43,6 +43,12 @@ export function applyFilters(sessions: Session[], filters: FilterState): Session
       if (s.startTime < filters.timeRange.start || s.endTime > filters.timeRange.end) return false
     }
 
+    // Side event tag filter: if tags selected, show matching side events + all non-side-events
+    if (filters.sideEventTags && filters.sideEventTags.length > 0) {
+      const isSideEvent = s.tags.includes('side-event')
+      if (isSideEvent && !filters.sideEventTags.some(tag => s.tags.includes(tag))) return false
+    }
+
     return true
   })
 }

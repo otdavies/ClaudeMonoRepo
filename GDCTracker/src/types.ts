@@ -62,6 +62,19 @@ export interface AppState {
   selectedDay: Day
 }
 
+export type SideEventTag = 'party' | 'meetup' | 'showcase' | 'mixer' | 'awards' | 'workshop'
+
+export const ALL_SIDE_EVENT_TAGS: SideEventTag[] = ['party', 'meetup', 'showcase', 'mixer', 'awards', 'workshop']
+
+export const SIDE_EVENT_TAG_COLORS: Record<SideEventTag, string> = {
+  party: 'bg-pink-500/20 text-pink-400 border-pink-500',
+  mixer: 'bg-emerald-500/20 text-emerald-400 border-emerald-500',
+  showcase: 'bg-amber-500/20 text-amber-400 border-amber-500',
+  awards: 'bg-yellow-500/20 text-yellow-400 border-yellow-500',
+  workshop: 'bg-violet-500/20 text-violet-400 border-violet-500',
+  meetup: 'bg-sky-500/20 text-sky-400 border-sky-500',
+}
+
 export interface FilterState {
   search: string
   tracks: Track[]
@@ -71,6 +84,7 @@ export interface FilterState {
   scheduledOnly: boolean
   hideConflicts: boolean
   timeRange: { start: string; end: string } | null
+  sideEventTags: SideEventTag[]
 }
 
 export type ViewMode = 'browse' | 'schedule' | 'up-next'

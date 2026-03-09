@@ -20,6 +20,18 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
   const hasConflicts = conflicts.length > 0
   const trackColor = TRACK_COLORS[session.track]
   const isScheduled = userData.interest > 0
+  const isSideEvent = session.tags.includes('side-event')
+  const sideEventCategory = isSideEvent ? session.tags.find(t => ['party', 'meetup', 'showcase', 'mixer', 'awards', 'workshop'].includes(t)) : null
+
+  // Side event border colors by category
+  const sideEventBorder = isSideEvent
+    ? sideEventCategory === 'party' ? 'border-l-4 border-l-pink-500'
+    : sideEventCategory === 'mixer' ? 'border-l-4 border-l-emerald-500'
+    : sideEventCategory === 'showcase' ? 'border-l-4 border-l-amber-500'
+    : sideEventCategory === 'awards' ? 'border-l-4 border-l-yellow-400'
+    : sideEventCategory === 'workshop' ? 'border-l-4 border-l-violet-500'
+    : 'border-l-4 border-l-sky-500' // meetup default
+    : ''
 
   const handleClick = useCallback(() => onToggleExpand(session.id), [onToggleExpand, session.id])
 
@@ -30,8 +42,9 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
 
   return (
     <div
-      className={`card p-3 transition-shadow duration-150 cursor-pointer ${
-        isScheduled ? 'ring-1 ring-gdc-accent/50 bg-gdc-accent/5' : ''
+      className={`card p-3 transition-shadow duration-150 cursor-pointer ${sideEventBorder} ${
+        isSideEvent && !isScheduled ? 'bg-gdc-surface/40' : ''
+      } ${isScheduled ? 'ring-1 ring-gdc-accent/50 bg-gdc-accent/5' : ''
       } ${hasConflicts && isScheduled ? 'ring-1 ring-gdc-danger/50' : ''}`}
       onClick={handleClick}
     >
@@ -56,10 +69,15 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
       </div>
 
       {/* Track badge on mobile (own row) */}
-      <div className="sm:hidden mb-1">
+      <div className="sm:hidden mb-1 flex items-center gap-1.5">
         <span className={`track-badge ${trackColor}`}>
           {session.track}
         </span>
+        {isSideEvent && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-medium">
+            Side Event
+          </span>
+        )}
       </div>
 
       {/* Title */}

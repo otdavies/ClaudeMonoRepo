@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FilterState, Track, SessionFormat, Day, ALL_TRACKS, ALL_FORMATS, ALL_DAYS, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
+import { FilterState, Track, SessionFormat, Day, ALL_TRACKS, ALL_FORMATS, ALL_DAYS, DAY_LABELS, TRACK_COLORS, InterestLevel, SideEventTag, ALL_SIDE_EVENT_TAGS, SIDE_EVENT_TAG_COLORS } from '../types'
 import type { BrowseMode } from './SessionList'
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
   swipeActive: boolean
   onBrowseModeChange: (v: BrowseMode) => void
   onSwipeChange: (on: boolean) => void
+  showSideEvents?: boolean
 }
 
 // --- Toggle component ---
@@ -31,7 +32,7 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
   )
 }
 
-export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseMode, swipeActive, onBrowseModeChange, onSwipeChange }: Props) {
+export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseMode, swipeActive, onBrowseModeChange, onSwipeChange, showSideEvents }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -66,6 +67,13 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
     onUpdate({ ...filters, days })
   }
 
+  const toggleSideEventTag = (tag: SideEventTag) => {
+    const sideEventTags = filters.sideEventTags.includes(tag)
+      ? filters.sideEventTags.filter(x => x !== tag)
+      : [...filters.sideEventTags, tag]
+    onUpdate({ ...filters, sideEventTags })
+  }
+
   const clearAll = () => {
     onUpdate({
       search: '',
@@ -76,12 +84,14 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
       scheduledOnly: false,
       hideConflicts: false,
       timeRange: null,
+      sideEventTags: [],
     })
     setShowSearch(false)
   }
 
   const hasActiveFilters = filters.search || filters.tracks.length > 0 || filters.formats.length > 0 ||
-    filters.days.length > 0 || filters.interestMin > 0 || filters.scheduledOnly || filters.timeRange
+    filters.days.length > 0 || filters.interestMin > 0 || filters.scheduledOnly || filters.timeRange ||
+    filters.sideEventTags.length > 0
 
   const activeFilterCount = [
     filters.search.length > 0,
@@ -91,6 +101,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
     filters.interestMin > 0,
     filters.scheduledOnly,
     filters.timeRange != null,
+    filters.sideEventTags.length > 0,
   ].filter(Boolean).length
 
   return (
@@ -234,6 +245,25 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
               ))}
             </div>
           </FilterSection>
+
+          {/* Side Event Type filter (only visible when side events are enabled) */}
+          {showSideEvents && (
+            <FilterSection label="Side Event Type">
+              <div className="flex flex-wrap gap-1">
+                {ALL_SIDE_EVENT_TAGS.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => toggleSideEventTag(tag)}
+                    className={`track-badge transition-all duration-150 cursor-pointer capitalize ${SIDE_EVENT_TAG_COLORS[tag]} ${
+                      filters.sideEventTags.length > 0 && !filters.sideEventTags.includes(tag) ? 'opacity-25 scale-95' : ''
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </FilterSection>
+          )}
 
           {/* Interest filter */}
           <FilterSection label="Minimum Interest">

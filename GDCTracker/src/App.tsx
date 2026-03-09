@@ -28,6 +28,7 @@ const DEFAULT_FILTERS: FilterState = {
   scheduledOnly: false,
   hideConflicts: false,
   timeRange: null,
+  sideEventTags: [],
 }
 
 // Debounce hook for search input
@@ -254,6 +255,7 @@ export default function App() {
                   swipeActive={swipeMode}
                   onBrowseModeChange={setBrowseMode}
                   onSwipeChange={setSwipeMode}
+                  showSideEvents={showSideEvents}
                 />
                 <SessionList
                   sessions={filteredSessions}
