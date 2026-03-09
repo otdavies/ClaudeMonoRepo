@@ -96,7 +96,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
   return (
     <div className="space-y-2">
       {/* Single toolbar row: view modes + actions */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1 min-w-0 overflow-hidden">
         <BrowseModeControl
           value={browseMode}
           swipeActive={swipeActive}
@@ -104,7 +104,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
           onSwipe={onSwipeChange}
         />
 
-        <div className="flex-1" />
+        <div className="flex-1 min-w-0" />
 
         <Toggle
           checked={filters.scheduledOnly}
@@ -328,7 +328,7 @@ export function BrowseModeControl({
 }) {
   const activeKey: BrowseTab = swipeActive ? 'swipe' : value
   return (
-    <div className="inline-flex items-center rounded-lg bg-gdc-surface/50 border border-gdc-border/30 p-0.5 gap-0.5">
+    <div className="inline-flex items-center rounded-lg bg-gdc-surface/50 border border-gdc-border/30 p-0.5 gap-0.5 shrink min-w-0">
       {BROWSE_TABS.map(({ key, label, accent }) => {
         const isActive = activeKey === key
         return (
@@ -342,7 +342,7 @@ export function BrowseModeControl({
                 onChange(key)
               }
             }}
-            className={`text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 font-medium ${
+            className={`text-[11px] px-1.5 sm:px-2.5 py-1 rounded-md transition-all duration-150 font-medium whitespace-nowrap ${
               isActive
                 ? accent
                   ? 'bg-gdc-gold/15 text-gdc-gold'
