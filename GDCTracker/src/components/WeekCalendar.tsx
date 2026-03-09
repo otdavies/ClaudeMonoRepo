@@ -3,7 +3,6 @@ import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS } from '../type
 // Calendar grid only shows confirmed days, not TBD
 const CALENDAR_DAYS: Day[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 import { formatTime, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
-import { downloadICS } from '../utils/calendar'
 
 interface Props {
   sessions: Session[]
@@ -43,17 +42,6 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
             ) : null
           })}
         </div>
-        {totalScheduled > 0 && (
-          <button
-            onClick={() => downloadICS(sessions)}
-            className="btn-primary flex items-center gap-1"
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
-            </svg>
-            Export .ics
-          </button>
-        )}
       </div>
 
       {/* Calendar grid */}

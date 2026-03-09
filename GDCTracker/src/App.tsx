@@ -4,6 +4,8 @@ import { Session, FilterState, UserSessionData, ViewMode, InterestLevel } from '
 import { applyFilters } from './utils/filters'
 import { getScheduleConflicts } from './utils/conflicts'
 import { useLocalStorage } from './hooks/useLocalStorage'
+import { useProfile } from './hooks/useProfile'
+import { useAttendance } from './hooks/useAttendance'
 import { FilterBar, BrowseModeControl } from './components/FilterBar'
 import { SessionList } from './components/SessionList'
 import type { BrowseMode } from './components/SessionList'
@@ -11,6 +13,7 @@ import { ScheduleView } from './components/ScheduleView'
 import { UpNextView } from './components/UpNextView'
 import { SwipeView } from './components/SwipeView'
 import { SessionDetailModal } from './components/SessionDetailModal'
+import { ProfileSetup } from './components/ProfileSetup'
 import { useNotifications } from './hooks/useNotifications'
 
 const DEFAULT_FILTERS: FilterState = {
@@ -40,6 +43,9 @@ export default function App() {
   const [browseMode, setBrowseMode] = useState<BrowseMode>('timeline')
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
 
+  // User profile (name + color)
+  const { profile, saveProfile } = useProfile()
+
   // Session reminders via notifications
   const { requestPermission } = useNotifications(allSessions, userData)
 
@@ -62,6 +68,15 @@ export default function App() {
     () => allSessions.filter(s => (userData[s.id]?.interest ?? 0) > 0),
     [userData]
   )
+
+  // Picked session IDs for attendance sync
+  const pickedSessionIds = useMemo(
+    () => allSessions.filter(s => userData[s.id]?.picked).map(s => s.id),
+    [userData]
+  )
+
+  // Multi-user attendance
+  const { getAttendees, getAllAttendees } = useAttendance(profile, pickedSessionIds)
 
   const conflictMap = useMemo(
     () => getScheduleConflicts(scheduledSessions),
@@ -105,6 +120,11 @@ export default function App() {
 
   const scheduledCount = scheduledSessions.length
 
+  // Show profile setup on first visit
+  if (!profile) {
+    return <ProfileSetup onSave={saveProfile} />
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -122,7 +142,7 @@ export default function App() {
                   className="text-[10px] text-gdc-textMuted hover:text-gdc-accent"
                   title="Enable session reminders"
                 >
-                  🔔 Notify
+                  Notify
                 </button>
               )}
               {scheduledCount > 0 && (
@@ -130,6 +150,16 @@ export default function App() {
                   {scheduledCount} starred
                 </span>
               )}
+              {/* Profile indicator */}
+              <button
+                onClick={() => setSelectedSession(null)} // handled below
+                className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold"
+                style={{ backgroundColor: profile.color }}
+                title={`${profile.name} — tap to edit profile`}
+                // We use a separate state for profile editing
+              >
+                {profile.name.charAt(0).toUpperCase()}
+              </button>
             </div>
           </div>
 
@@ -190,6 +220,8 @@ export default function App() {
             onUpdateUserData={updateUserData}
             conflictMap={conflictMap}
             onSelectSession={selectSession}
+            getAttendees={getAttendees}
+            getAllAttendees={getAllAttendees}
           />
         )}
 
@@ -199,6 +231,8 @@ export default function App() {
             userData={userData}
             onUpdateUserData={updateUserData}
             onSelectSession={selectSession}
+            getAttendees={getAttendees}
+            getAllAttendees={getAllAttendees}
           />
         )}
 
@@ -219,6 +253,7 @@ export default function App() {
           userData={userData[selectedSession.id] ?? { interest: 0, scheduled: false, picked: false, notes: '' }}
           onUpdateUserData={updateUserData}
           onClose={() => setSelectedSession(null)}
+          getAttendees={getAttendees}
         />
       )}
 

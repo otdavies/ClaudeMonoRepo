@@ -3,6 +3,8 @@ import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS } from '../type
 import { formatTime, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
 import { InterestLevel } from '../types'
+import { AttendeesBadge, AttendeeStrip } from './AttendeesBadge'
+import { AttendeeInfo } from '../hooks/useAttendance'
 import { getWalkWarnings, getZoneLabel } from '../utils/location'
 
 interface Props {
@@ -12,6 +14,8 @@ interface Props {
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   conflictMap: Map<string, string[]>
   onSelectSession?: (id: string) => void
+  getAttendees?: (sessionId: string) => AttendeeInfo[]
+  getAllAttendees?: (sessionId: string) => AttendeeInfo[]
 }
 
 interface TimeSlot {
@@ -37,7 +41,7 @@ function groupByStartTime(sorted: Session[]): TimeSlot[] {
   return slots
 }
 
-export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Props) {
+export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap, onSelectSession, getAttendees, getAllAttendees }: Props) {
   const daySessions = sessions
     .filter(s => s.day === day)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
@@ -181,51 +185,61 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
                     return (
                       <div
                         key={session.id}
-                        className={`px-3 py-2 cursor-pointer hover:bg-gdc-surfaceHover/50 active:bg-gdc-surfaceHover transition-colors ${
+                        className={`relative px-3 py-2 cursor-pointer hover:bg-gdc-surfaceHover/50 active:bg-gdc-surfaceHover transition-colors ${
                           picked ? 'bg-gdc-accent/5' :
                           dimmed ? 'opacity-40' : ''
                         }`}
                         onClick={() => onSelectSession?.(session.id)}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-start gap-2 min-w-0 flex-1">
-                            {/* Pick indicator */}
-                            {picked && (
-                              <div className="shrink-0 mt-0.5 w-4 h-4 rounded-full bg-gdc-accent flex items-center justify-center">
-                                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
-                                  <path d="M5 13l4 4L19 7" />
-                                </svg>
+                        {(() => {
+                          const allPeople = getAllAttendees?.(session.id) ?? []
+                          const friends = getAttendees?.(session.id) ?? []
+                          return (
+                            <>
+                              <AttendeeStrip attendees={allPeople} />
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-start gap-2 min-w-0 flex-1">
+                                  {/* Pick indicator */}
+                                  {picked && (
+                                    <div className="shrink-0 mt-0.5 w-4 h-4 rounded-full bg-gdc-accent flex items-center justify-center">
+                                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                        <path d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="text-sm font-semibold leading-snug">{session.title}</h3>
+                                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                      <span className={`track-badge ${trackColor} text-[10px]`}>
+                                        {session.track}
+                                      </span>
+                                      <span className="text-[10px] text-gdc-textMuted">
+                                        {session.room}
+                                        <span className="opacity-60 ml-0.5">({zone})</span>
+                                      </span>
+                                    </div>
+                                    {session.speakers.length > 0 && (
+                                      <p className="text-[11px] text-gdc-textMuted mt-0.5 truncate">
+                                        {session.speakers.join(', ')}
+                                      </p>
+                                    )}
+                                    {hasConflict && (
+                                      <p className="text-red-400 text-[10px] mt-0.5 font-medium conflict-pulse">CONFLICT</p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="shrink-0 flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
+                                  <InterestRating
+                                    level={interest}
+                                    onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
+                                    compact
+                                  />
+                                  {friends.length > 0 && <AttendeesBadge attendees={friends} />}
+                                </div>
                               </div>
-                            )}
-                            <div className="min-w-0 flex-1">
-                              <h3 className="text-sm font-semibold leading-snug">{session.title}</h3>
-                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                <span className={`track-badge ${trackColor} text-[10px]`}>
-                                  {session.track}
-                                </span>
-                                <span className="text-[10px] text-gdc-textMuted">
-                                  {session.room}
-                                  <span className="opacity-60 ml-0.5">({zone})</span>
-                                </span>
-                              </div>
-                              {session.speakers.length > 0 && (
-                                <p className="text-[11px] text-gdc-textMuted mt-0.5 truncate">
-                                  {session.speakers.join(', ')}
-                                </p>
-                              )}
-                              {hasConflict && (
-                                <p className="text-red-400 text-[10px] mt-0.5 font-medium conflict-pulse">CONFLICT</p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="shrink-0" onClick={e => e.stopPropagation()}>
-                            <InterestRating
-                              level={interest}
-                              onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
-                              compact
-                            />
-                          </div>
-                        </div>
+                            </>
+                          )
+                        })()}
                       </div>
                     )
                   })}

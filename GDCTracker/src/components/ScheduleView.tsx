@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Session, UserSessionData, Day, ALL_DAYS } from '../types'
 import { DaySchedule } from './DaySchedule'
 import { WeekCalendar } from './WeekCalendar'
+import { AttendeeInfo } from '../hooks/useAttendance'
 
 interface Props {
   sessions: Session[]
@@ -9,9 +10,11 @@ interface Props {
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   conflictMap: Map<string, string[]>
   onSelectSession?: (id: string) => void
+  getAttendees?: (sessionId: string) => AttendeeInfo[]
+  getAllAttendees?: (sessionId: string) => AttendeeInfo[]
 }
 
-export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Props) {
+export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession, getAttendees, getAllAttendees }: Props) {
   const [mode, setMode] = useState<'day' | 'week'>('day')
   const [selectedDay, setSelectedDay] = useState<Day>('Wed')
 
@@ -79,6 +82,8 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
           onUpdateUserData={onUpdateUserData}
           conflictMap={conflictMap}
           onSelectSession={onSelectSession}
+          getAttendees={getAttendees}
+          getAllAttendees={getAllAttendees}
         />
       ) : (
         <WeekCalendar

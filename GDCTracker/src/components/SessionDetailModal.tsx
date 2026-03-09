@@ -4,21 +4,24 @@ import { formatTimeRange, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
 import { generateGoogleCalendarURL } from '../utils/calendar'
 import { getZoneLabel } from '../utils/location'
+import { AttendeeInfo } from '../hooks/useAttendance'
 
 interface Props {
   session: Session
   userData: UserSessionData
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   onClose: () => void
+  getAttendees?: (sessionId: string) => AttendeeInfo[]
 }
 
 const DEFAULT_USER_DATA: UserSessionData = { interest: 0, scheduled: false, picked: false, notes: '' }
 
-export function SessionDetailModal({ session, userData, onUpdateUserData, onClose }: Props) {
+export function SessionDetailModal({ session, userData, onUpdateUserData, onClose, getAttendees }: Props) {
   const data = userData ?? DEFAULT_USER_DATA
   const trackColor = TRACK_COLORS[session.track]
   const duration = getDurationMinutes(session.startTime, session.endTime)
   const zone = getZoneLabel(session.room)
+  const attendees = getAttendees?.(session.id) ?? []
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
@@ -88,6 +91,19 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
               onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
             />
           </div>
+
+          {/* Attendees */}
+          {attendees.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-gdc-textMuted">Attending:</span>
+              {attendees.map(a => (
+                <div key={a.userId} className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gdc-bg text-xs">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: a.color }} />
+                  <span>{a.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Description */}
           <p className="text-sm text-gdc-textMuted leading-relaxed">{session.description}</p>

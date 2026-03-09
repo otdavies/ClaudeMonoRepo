@@ -2,6 +2,8 @@ import { useMemo, useCallback } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
 import { formatTime, formatTimeRange, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
+import { AttendeesBadge, AttendeeStrip } from './AttendeesBadge'
+import { AttendeeInfo } from '../hooks/useAttendance'
 import { getWalkWarnings, getZoneLabel, getWalkTimeBetweenRooms, type WalkWarning } from '../utils/location'
 
 interface Props {
@@ -9,6 +11,8 @@ interface Props {
   userData: Record<string, UserSessionData>
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   onSelectSession?: (id: string) => void
+  getAttendees?: (sessionId: string) => AttendeeInfo[]
+  getAllAttendees?: (sessionId: string) => AttendeeInfo[]
 }
 
 interface TimeSlot {
@@ -61,7 +65,7 @@ function WalkWarningDivider({ warning }: { warning: WalkWarning }) {
   )
 }
 
-export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSession }: Props) {
+export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSession, getAttendees, getAllAttendees }: Props) {
   const starredSessions = useMemo(
     () => sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0),
     [sessions, userData]
@@ -212,11 +216,13 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                   const zone = getZoneLabel(session.room)
                   const walkFromPrev = prevBestRoom ? getWalkTimeBetweenRooms(prevBestRoom, session.room) : 0
                   const sessionDuration = getDurationMinutes(session.startTime, session.endTime)
+                  const friends = getAttendees?.(session.id) ?? []
+                  const allPeople = getAllAttendees?.(session.id) ?? []
 
                   return (
                     <div
                       key={session.id}
-                      className={`px-3 py-2 transition-colors ${
+                      className={`relative px-3 py-2 transition-colors ${
                         picked
                           ? 'bg-gdc-accent/5'
                           : isChoice && hasPick
@@ -224,6 +230,7 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                           : ''
                       }`}
                     >
+                      <AttendeeStrip attendees={allPeople} />
                       <div className="flex items-start gap-2">
                         {/* Pick button */}
                         <button
@@ -276,13 +283,14 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                           </p>
                         </div>
 
-                        {/* Star rating */}
-                        <div className="shrink-0" onClick={e => e.stopPropagation()}>
+                        {/* Attendees + Star rating */}
+                        <div className="shrink-0 flex flex-col items-end gap-1" onClick={e => e.stopPropagation()}>
                           <InterestRating
                             level={interest}
                             onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
                             compact
                           />
+                          {friends.length > 0 && <AttendeesBadge attendees={friends} />}
                         </div>
                       </div>
                     </div>
