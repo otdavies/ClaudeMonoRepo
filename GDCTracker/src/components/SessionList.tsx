@@ -222,8 +222,8 @@ function CompactRow({ s, interest, isStarred, hasConflict, trackColor, onUpdateU
       onClick={handleRowTap}
     >
       {/* Time */}
-      <span className="font-mono text-gdc-textMuted text-[11px] whitespace-nowrap">
-        <span className="sm:hidden">{formatTime(s.startTime).replace(/\s*(AM|PM)/, '').replace(':', '')}</span>
+      <span className="font-mono text-gdc-textMuted text-[11px] whitespace-nowrap tabular-nums">
+        <span className="sm:hidden">{formatTime(s.startTime).replace(/\s*(AM|PM)/, '')}</span>
         <span className="hidden sm:inline">{s.day} {formatTime(s.startTime).replace(' ', '')}</span>
       </span>
 
@@ -239,24 +239,13 @@ function CompactRow({ s, interest, isStarred, hasConflict, trackColor, onUpdateU
         </p>
       </div>
 
-      {/* Mobile: compact star indicator */}
-      <div className="sm:hidden flex items-center gap-0.5">
-        {([1, 2, 3] as const).map(n => (
-          <button
-            key={n}
-            onClick={e => {
-              e.stopPropagation()
-              onUpdateUserData(s.id, { interest: (interest === n ? 0 : n) as InterestLevel })
-            }}
-            className={`star-btn text-sm p-0.5 ${
-              n <= interest
-                ? n === 3 ? 'text-red-400' : n === 2 ? 'text-gdc-gold' : 'text-gdc-textMuted'
-                : 'text-gdc-border'
-            }`}
-          >
-            {n <= interest ? '\u2605' : '\u2606'}
-          </button>
-        ))}
+      {/* Mobile: compact interest rating */}
+      <div className="sm:hidden">
+        <InterestRating
+          level={interest}
+          onChange={v => onUpdateUserData(s.id, { interest: v as InterestLevel })}
+          compact
+        />
       </div>
 
       {/* Desktop: track badge */}
