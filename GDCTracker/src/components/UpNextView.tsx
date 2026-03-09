@@ -8,6 +8,7 @@ interface Props {
   sessions: Session[]
   userData: Record<string, UserSessionData>
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
+  onSelectSession?: (id: string) => void
 }
 
 interface TimeSlot {
@@ -46,7 +47,7 @@ function WalkWarningBanner({ warning }: { warning: WalkWarning }) {
   )
 }
 
-export function UpNextView({ sessions, userData, onUpdateUserData }: Props) {
+export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSession }: Props) {
   const starredSessions = useMemo(
     () => sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0),
     [sessions, userData]
@@ -191,7 +192,11 @@ export function UpNextView({ sessions, userData, onUpdateUserData }: Props) {
                     const walkFromPrev = prevBestRoom ? getWalkTimeBetweenRooms(prevBestRoom, session.room) : 0
 
                     return (
-                      <div key={session.id} className={j > 0 ? 'pt-2' : ''}>
+                      <div
+                        key={session.id}
+                        className={`${j > 0 ? 'pt-2' : ''} cursor-pointer hover:bg-gdc-surfaceHover/50 -mx-1 px-1 rounded transition-colors`}
+                        onClick={() => onSelectSession?.(session.id)}
+                      >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 mb-0.5 flex-wrap">

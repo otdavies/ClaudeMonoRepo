@@ -11,13 +11,14 @@ interface Props {
   userData: Record<string, UserSessionData>
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   conflictMap: Map<string, string[]>
+  onSelectSession?: (id: string) => void
 }
 
 const HOUR_HEIGHT = 80 // px per hour
 const START_HOUR = 9
 const END_HOUR = 18
 
-export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap }: Props) {
+export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Props) {
   const daySessions = sessions
     .filter(s => s.day === day)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
@@ -101,6 +102,7 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
                   width: `calc(${100 / col.total}% - 3rem / ${col.total} - 4px)`,
                   borderLeftWidth: '3px',
                 }}
+                onClick={() => onSelectSession?.(session.id)}
               >
                 <div className="flex items-start justify-between gap-1">
                   <div className="min-w-0 flex-1">

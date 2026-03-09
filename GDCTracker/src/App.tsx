@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { sessions as allSessions } from './data/sessions'
-import { FilterState, UserSessionData, ViewMode, InterestLevel } from './types'
+import { Session, FilterState, UserSessionData, ViewMode, InterestLevel } from './types'
 import { applyFilters } from './utils/filters'
 import { getScheduleConflicts } from './utils/conflicts'
 import { useLocalStorage } from './hooks/useLocalStorage'
@@ -10,6 +10,7 @@ import type { BrowseMode } from './components/SessionList'
 import { ScheduleView } from './components/ScheduleView'
 import { UpNextView } from './components/UpNextView'
 import { SwipeView } from './components/SwipeView'
+import { SessionDetailModal } from './components/SessionDetailModal'
 import { useNotifications } from './hooks/useNotifications'
 
 const DEFAULT_FILTERS: FilterState = {
@@ -94,6 +95,14 @@ export default function App() {
     return result
   }, [baseFilteredSessions, filters.interestMin, filters.scheduledOnly, userData])
 
+  // Session detail modal
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
+
+  const selectSession = useCallback((id: string) => {
+    const s = allSessions.find(s => s.id === id)
+    if (s) setSelectedSession(s)
+  }, [])
+
   const scheduledCount = scheduledSessions.length
 
   return (
@@ -169,6 +178,7 @@ export default function App() {
               onUpdateUserData={updateUserData}
               conflictMap={conflictMap}
               browseMode={browseMode}
+              onSelectSession={selectSession}
             />
           </div>
         )}
@@ -179,6 +189,7 @@ export default function App() {
             userData={userData}
             onUpdateUserData={updateUserData}
             conflictMap={conflictMap}
+            onSelectSession={selectSession}
           />
         )}
 
@@ -187,6 +198,7 @@ export default function App() {
             sessions={allSessions}
             userData={userData}
             onUpdateUserData={updateUserData}
+            onSelectSession={selectSession}
           />
         )}
 
@@ -199,6 +211,16 @@ export default function App() {
         )}
 
       </main>
+
+      {/* Session detail modal */}
+      {selectedSession && (
+        <SessionDetailModal
+          session={selectedSession}
+          userData={userData[selectedSession.id] ?? { interest: 0, scheduled: false, notes: '' }}
+          onUpdateUserData={updateUserData}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
 
       {/* Footer */}
       <footer className="border-t border-gdc-border py-2 text-center text-[10px] text-gdc-textMuted">

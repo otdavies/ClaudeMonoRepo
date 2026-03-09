@@ -9,9 +9,10 @@ interface Props {
   userData: Record<string, UserSessionData>
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   conflictMap: Map<string, string[]>
+  onSelectSession?: (id: string) => void
 }
 
-export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap }: Props) {
+export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Props) {
   const [mode, setMode] = useState<'day' | 'week'>('day')
   const [selectedDay, setSelectedDay] = useState<Day>('Wed')
 
@@ -68,19 +69,14 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
           userData={userData}
           onUpdateUserData={onUpdateUserData}
           conflictMap={conflictMap}
+          onSelectSession={onSelectSession}
         />
       ) : (
         <WeekCalendar
           sessions={scheduledSessions}
           userData={userData}
           conflictMap={conflictMap}
-          onSelectSession={id => {
-            const session = sessions.find(s => s.id === id)
-            if (session) {
-              setSelectedDay(session.day)
-              setMode('day')
-            }
-          }}
+          onSelectSession={onSelectSession}
         />
       )}
 

@@ -14,6 +14,7 @@ interface Props {
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   conflictMap: Map<string, string[]>
   browseMode: BrowseMode
+  onSelectSession?: (id: string) => void
 }
 
 // ─── Collapsible section ────────────────────────────────────────────
@@ -51,11 +52,15 @@ function CollapsibleGroup({ label, count, badge, children, defaultOpen = false }
 
 // ─── Timeline view (Day > Time Slot foldouts) ──────────────────────
 
-function TimelineView({ sessions, userData, onUpdateUserData, conflictMap }: Omit<Props, 'browseMode'>) {
+function TimelineView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Omit<Props, 'browseMode'>) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const toggleExpand = useCallback((id: string) => {
-    startTransition(() => setExpandedId(prev => prev === id ? null : id))
-  }, [])
+    if (onSelectSession) {
+      onSelectSession(id)
+    } else {
+      startTransition(() => setExpandedId(prev => prev === id ? null : id))
+    }
+  }, [onSelectSession])
 
   const dayOrder: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, TBD: 5 }
 
@@ -125,11 +130,15 @@ function TimelineView({ sessions, userData, onUpdateUserData, conflictMap }: Omi
 
 // ─── Tracks view (Track foldouts) ──────────────────────────────────
 
-function TracksView({ sessions, userData, onUpdateUserData, conflictMap }: Omit<Props, 'browseMode'>) {
+function TracksView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Omit<Props, 'browseMode'>) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const toggleExpand = useCallback((id: string) => {
-    startTransition(() => setExpandedId(prev => prev === id ? null : id))
-  }, [])
+    if (onSelectSession) {
+      onSelectSession(id)
+    } else {
+      startTransition(() => setExpandedId(prev => prev === id ? null : id))
+    }
+  }, [onSelectSession])
 
   const dayOrder: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4, TBD: 5 }
 
@@ -186,22 +195,24 @@ function TracksView({ sessions, userData, onUpdateUserData, conflictMap }: Omit<
 
 // ─── Compact view (dense scannable rows) ───────────────────────────
 
-function CompactRow({ s, interest, isStarred, hasConflict, trackColor, onUpdateUserData }: {
+function CompactRow({ s, interest, isStarred, hasConflict, trackColor, onUpdateUserData, onSelectSession }: {
   s: Session
   interest: InterestLevel
   isStarred: boolean
   hasConflict: boolean
   trackColor: string
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
+  onSelectSession?: (id: string) => void
 }) {
-  // Quick-star: tap row on mobile to toggle 1 star
   const handleRowTap = useCallback((e: React.MouseEvent) => {
     // Don't fire if they tapped a star button
     if ((e.target as HTMLElement).closest('.star-btn')) return
-    // Only on mobile (sm breakpoint handled by CSS for desktop stars)
-    if (window.innerWidth >= 640) return
-    onUpdateUserData(s.id, { interest: isStarred ? 0 : 1 as InterestLevel })
-  }, [s.id, isStarred, onUpdateUserData])
+    if (onSelectSession) {
+      onSelectSession(s.id)
+    } else if (window.innerWidth < 640) {
+      onUpdateUserData(s.id, { interest: isStarred ? 0 : 1 as InterestLevel })
+    }
+  }, [s.id, isStarred, onUpdateUserData, onSelectSession])
 
   return (
     <div
@@ -267,7 +278,7 @@ function CompactRow({ s, interest, isStarred, hasConflict, trackColor, onUpdateU
 
 const MemoCompactRow = memo(CompactRow)
 
-function CompactView({ sessions, userData, onUpdateUserData, conflictMap }: Omit<Props, 'browseMode'>) {
+function CompactView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Omit<Props, 'browseMode'>) {
   const [visibleCount, setVisibleCount] = useState(60)
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -308,6 +319,7 @@ function CompactView({ sessions, userData, onUpdateUserData, conflictMap }: Omit
               hasConflict={(conflictMap.get(s.id) ?? []).length > 0}
               trackColor={TRACK_COLORS[s.track]}
               onUpdateUserData={onUpdateUserData}
+              onSelectSession={onSelectSession}
             />
           )
         })}
@@ -324,7 +336,7 @@ function CompactView({ sessions, userData, onUpdateUserData, conflictMap }: Omit
 
 // ─── Main SessionList ──────────────────────────────────────────────
 
-export function SessionList({ sessions, userData, onUpdateUserData, conflictMap, browseMode }: Props) {
+export function SessionList({ sessions, userData, onUpdateUserData, conflictMap, browseMode, onSelectSession }: Props) {
   if (sessions.length === 0) {
     return (
       <div className="text-center py-12 text-gdc-textMuted">
@@ -334,7 +346,7 @@ export function SessionList({ sessions, userData, onUpdateUserData, conflictMap,
     )
   }
 
-  const shared = { sessions, userData, onUpdateUserData, conflictMap }
+  const shared = { sessions, userData, onUpdateUserData, conflictMap, onSelectSession }
 
   switch (browseMode) {
     case 'timeline':

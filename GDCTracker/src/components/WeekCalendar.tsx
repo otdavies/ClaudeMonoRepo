@@ -9,7 +9,7 @@ interface Props {
   sessions: Session[]
   userData: Record<string, UserSessionData>
   conflictMap: Map<string, string[]>
-  onSelectSession: (id: string) => void
+  onSelectSession?: (id: string) => void
 }
 
 const HOUR_HEIGHT = 60
@@ -121,7 +121,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
                         cursor-pointer overflow-hidden hover:brightness-125
                         ${hasConflict ? 'bg-red-500/20 ring-1 ring-red-500/50' : bgClass}`}
                       style={{ top, height }}
-                      onClick={() => onSelectSession(session.id)}
+                      onClick={() => onSelectSession?.(session.id)}
                       title={`${session.title}\n${formatTime(session.startTime)}-${formatTime(session.endTime)}\n${session.room}`}
                     >
                       <p className="font-medium truncate">{session.title}</p>
