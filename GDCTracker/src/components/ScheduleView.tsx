@@ -14,9 +14,15 @@ interface Props {
   getAllAttendees?: (sessionId: string) => AttendeeInfo[]
 }
 
+function getClosestDay(): Day {
+  const dayOfWeek = new Date().getDay() // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+  const map: Record<number, Day> = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri' }
+  return map[dayOfWeek] ?? 'Mon'
+}
+
 export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap, onSelectSession, getAttendees, getAllAttendees }: Props) {
   const [mode, setMode] = useState<'day' | 'week'>('day')
-  const [selectedDay, setSelectedDay] = useState<Day>('Wed')
+  const [selectedDay, setSelectedDay] = useState<Day>(getClosestDay)
 
   // interest > 0 = starred, picked = attending
   const scheduledSessions = sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0)
