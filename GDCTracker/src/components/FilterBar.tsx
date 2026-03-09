@@ -222,44 +222,87 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
   )
 }
 
-const BROWSE_MODE_LABELS: Record<BrowseMode, string> = {
-  timeline: 'Timeline',
-  tracks: 'Tracks',
-  compact: 'Compact',
-}
+type BrowseTab = BrowseMode | 'swipe'
 
-const BROWSE_MODE_ICONS: Record<BrowseMode, React.ReactNode> = {
-  timeline: (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeWidth="2" d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
-    </svg>
-  ),
-  tracks: (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeWidth="2" d="M4 6h16M4 12h10M4 18h6" />
-    </svg>
-  ),
-  compact: (
-    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeWidth="2" d="M3 5h18M3 10h18M3 15h18M3 20h18" />
-    </svg>
-  ),
-}
+const BROWSE_TAB_CONFIG: { key: BrowseTab; label: string; icon: React.ReactNode }[] = [
+  {
+    key: 'timeline',
+    label: 'Timeline',
+    icon: (
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeWidth="2" d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+      </svg>
+    ),
+  },
+  {
+    key: 'tracks',
+    label: 'Tracks',
+    icon: (
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeWidth="2" d="M4 6h16M4 12h10M4 18h6" />
+      </svg>
+    ),
+  },
+  {
+    key: 'compact',
+    label: 'Compact',
+    icon: (
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeWidth="2" d="M3 5h18M3 10h18M3 15h18M3 20h18" />
+      </svg>
+    ),
+  },
+  {
+    key: 'swipe',
+    label: 'Swipe',
+    icon: (
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5h6" />
+        <path strokeWidth="2" strokeLinecap="round" d="M9 12l2 2 4-4" />
+      </svg>
+    ),
+  },
+]
 
-export function BrowseModeControl({ value, onChange }: { value: BrowseMode; onChange: (v: BrowseMode) => void }) {
+export function BrowseModeControl({
+  value,
+  swipeActive,
+  onChange,
+  onSwipe,
+}: {
+  value: BrowseMode
+  swipeActive: boolean
+  onChange: (v: BrowseMode) => void
+  onSwipe: (on: boolean) => void
+}) {
+  const activeKey: BrowseTab = swipeActive ? 'swipe' : value
   return (
-    <div className="flex items-center gap-1 text-xs">
-      <span className="text-gdc-textMuted">View:</span>
-      {(['timeline', 'tracks', 'compact'] as const).map(m => (
-        <button
-          key={m}
-          onClick={() => onChange(m)}
-          className={`${value === m ? 'tab-active' : 'tab-inactive'} text-xs px-2 py-1 flex items-center gap-1`}
-        >
-          {BROWSE_MODE_ICONS[m]}
-          <span className="hidden sm:inline">{BROWSE_MODE_LABELS[m]}</span>
-        </button>
-      ))}
+    <div className="flex items-center rounded-lg bg-gdc-bg/60 border border-gdc-border/30 p-0.5">
+      {BROWSE_TAB_CONFIG.map(({ key, label, icon }) => {
+        const isActive = activeKey === key
+        return (
+          <button
+            key={key}
+            onClick={() => {
+              if (key === 'swipe') {
+                onSwipe(true)
+              } else {
+                onSwipe(false)
+                onChange(key)
+              }
+            }}
+            className={`text-[11px] px-2 py-1 rounded-md flex items-center gap-1 transition-all ${
+              isActive
+                ? 'bg-gdc-accent/15 text-gdc-accent font-medium shadow-sm'
+                : 'text-gdc-textMuted hover:text-gdc-text'
+            }`}
+            title={label}
+          >
+            {icon}
+            <span className="hidden sm:inline">{label}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
