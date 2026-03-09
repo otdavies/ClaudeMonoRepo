@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
 import { formatTimeRange, timeToMinutes } from '../utils/conflicts'
+import { InterestRating } from './InterestRating'
 
 interface Props {
   sessions: Session[]
@@ -11,7 +12,6 @@ interface Props {
 type SwipeMode = 'next' | Day
 
 const DAYS_LIST: Day[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
-const INTEREST_LABELS = ['', 'Maybe', 'Want', 'Must']
 
 function getLiveDay(): Day | null {
   const now = new Date()
@@ -63,13 +63,10 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
       filtered = sessions.filter(s => s.day === mode)
     }
 
-    // Sort: unrated first, then by time
-    return filtered.sort((a, b) => {
-      const aRated = (userData[a.id]?.interest ?? 0) > 0 ? 1 : 0
-      const bRated = (userData[b.id]?.interest ?? 0) > 0 ? 1 : 0
-      if (aRated !== bRated) return aRated - bRated
-      return a.startTime.localeCompare(b.startTime) || a.title.localeCompare(b.title)
-    })
+    // Only show unrated sessions — starred ones are already of interest
+    return filtered
+      .filter(s => (userData[s.id]?.interest ?? 0) === 0)
+      .sort((a, b) => a.startTime.localeCompare(b.startTime) || a.title.localeCompare(b.title))
   }, [sessions, userData, mode])
 
   const session = candidates[currentIndex] ?? null
@@ -170,22 +167,21 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
 
   // Count stats for the mode selector
   const dayCounts = useMemo(() => {
-    const counts: Record<string, { total: number; rated: number }> = {}
+    const counts: Record<string, { total: number; unrated: number }> = {}
     for (const d of DAYS_LIST) {
       const daySessions = sessions.filter(s => s.day === d)
       counts[d] = {
         total: daySessions.length,
-        rated: daySessions.filter(s => (userData[s.id]?.interest ?? 0) > 0).length,
+        unrated: daySessions.filter(s => (userData[s.id]?.interest ?? 0) === 0).length,
       }
     }
     return counts
   }, [sessions, userData])
 
-  const unratedInCandidates = candidates.filter(s => (userData[s.id]?.interest ?? 0) === 0).length
+  const unratedInCandidates = candidates.length
 
   // ─── Done state ───
   if (currentIndex >= candidates.length && candidates.length > 0) {
-    const starred = candidates.filter(s => (userData[s.id]?.interest ?? 0) > 0).length
     return (
       <div className="space-y-4">
         <ModeSelector mode={mode} onChangeMode={handleModeChange} dayCounts={dayCounts} />
@@ -193,11 +189,8 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
           <div className="text-3xl mb-3">&#10003;</div>
           <p className="text-base font-semibold mb-1">All reviewed!</p>
           <p className="text-sm text-gdc-textMuted mb-4">
-            {candidates.length} session{candidates.length !== 1 ? 's' : ''}, {starred} starred
+            No more unrated sessions
           </p>
-          <button onClick={() => setCurrentIndex(0)} className="btn-ghost text-sm">
-            Go again
-          </button>
         </div>
       </div>
     )
@@ -280,13 +273,11 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
             <span className="text-xs font-mono text-gdc-textMuted">
               {formatTimeRange(session.startTime, session.endTime)}
             </span>
-            {interest > 0 && (
-              <span className={`text-xs font-medium ${
-                interest === 3 ? 'text-red-400' : interest === 2 ? 'text-gdc-gold' : 'text-gdc-textMuted'
-              }`}>
-                {'\u2605'.repeat(interest)} {INTEREST_LABELS[interest]}
-              </span>
-            )}
+            <InterestRating
+              level={interest}
+              onChange={(n) => onUpdateUserData(session.id, { interest: n as InterestLevel })}
+              compact
+            />
           </div>
 
           {/* Title */}
@@ -318,32 +309,22 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
 
           {/* Action buttons */}
           <div className="mt-4 pt-3 border-t border-gdc-border">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
               <button
                 onClick={(e) => { e.stopPropagation(); goNext() }}
-                className="flex-1 py-2.5 rounded-lg bg-gdc-surface border border-gdc-border text-sm text-gdc-textMuted active:bg-gdc-surfaceHover"
+                className="py-2.5 px-4 rounded-lg bg-gdc-surface border border-gdc-border text-sm text-gdc-textMuted active:bg-gdc-surfaceHover"
               >
                 Skip
               </button>
-              {([1, 2, 3] as const).map(n => (
-                <button
-                  key={n}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onUpdateUserData(session.id, { interest: (interest === n ? 0 : n) as InterestLevel })
-                    goNext()
+              <div className="flex-1 flex justify-center" onClick={(e) => e.stopPropagation()}>
+                <InterestRating
+                  level={interest}
+                  onChange={(n) => {
+                    onUpdateUserData(session.id, { interest: n as InterestLevel })
+                    if (n > 0) goNext()
                   }}
-                  className={`flex-1 py-2.5 rounded-lg border text-sm font-medium active:scale-95 transition-transform ${
-                    n === 1
-                      ? 'bg-gdc-surface border-gdc-border text-gdc-text'
-                      : n === 2
-                      ? 'bg-gdc-gold/10 border-gdc-gold/40 text-gdc-gold'
-                      : 'bg-red-500/10 border-red-500/40 text-red-400'
-                  }`}
-                >
-                  {'\u2605'.repeat(n)}
-                </button>
-              ))}
+                />
+              </div>
             </div>
             <p className="text-center text-[10px] text-gdc-textMuted mt-1.5">
               Swipe right = star &middot; left = skip
@@ -370,7 +351,7 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
 function ModeSelector({ mode, onChangeMode, dayCounts }: {
   mode: SwipeMode
   onChangeMode: (m: SwipeMode) => void
-  dayCounts: Record<string, { total: number; rated: number }>
+  dayCounts: Record<string, { total: number; unrated: number }>
 }) {
   return (
     <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
@@ -385,8 +366,8 @@ function ModeSelector({ mode, onChangeMode, dayCounts }: {
         Up Next
       </button>
       {DAYS_LIST.map(d => {
-        const { total, rated } = dayCounts[d] ?? { total: 0, rated: 0 }
-        const allRated = total > 0 && rated === total
+        const { total, unrated } = dayCounts[d] ?? { total: 0, unrated: 0 }
+        const allDone = total > 0 && unrated === 0
         return (
           <button
             key={d}
@@ -394,15 +375,15 @@ function ModeSelector({ mode, onChangeMode, dayCounts }: {
             className={`shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors relative ${
               mode === d
                 ? 'bg-gdc-accent text-white'
-                : allRated
+                : allDone
                 ? 'bg-gdc-surface/50 text-gdc-textMuted/50 border border-gdc-border/50'
                 : 'bg-gdc-surface text-gdc-textMuted border border-gdc-border'
             }`}
           >
             {d}
-            {total > 0 && (
+            {unrated > 0 && (
               <span className="ml-1 text-[10px] opacity-60">
-                {rated}/{total}
+                {unrated}
               </span>
             )}
           </button>
