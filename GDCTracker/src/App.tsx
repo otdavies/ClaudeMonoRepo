@@ -16,6 +16,7 @@ import { SessionDetailModal } from './components/SessionDetailModal'
 import { ProfileSetup } from './components/ProfileSetup'
 import { Onboarding } from './components/Onboarding'
 import { useNotifications } from './hooks/useNotifications'
+import { InstallPrompt } from './components/InstallPrompt'
 
 const DEFAULT_FILTERS: FilterState = {
   search: '',
@@ -281,6 +282,8 @@ export default function App() {
           getAttendees={getAttendees}
         />
       )}
+
+      <InstallPrompt />
 
       {/* Footer */}
       <footer className="border-t border-gdc-border/30 py-2 text-center text-[10px] text-gdc-textMuted/50">
