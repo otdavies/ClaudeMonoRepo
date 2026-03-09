@@ -14,31 +14,59 @@ interface Props {
   onSelectSession?: (id: string) => void
 }
 
-const HOUR_HEIGHT = 80 // px per hour
-const START_HOUR = 9
-const END_HOUR = 18
+interface TimeSlot {
+  startTime: string
+  endTime: string
+  sessions: Session[]
+}
+
+function groupIntoSlots(sessions: Session[]): TimeSlot[] {
+  const sorted = [...sessions].sort((a, b) => a.startTime.localeCompare(b.startTime))
+  const slots: TimeSlot[] = []
+  for (const s of sorted) {
+    const last = slots[slots.length - 1]
+    if (last && timeToMinutes(s.startTime) < timeToMinutes(last.endTime)) {
+      last.sessions.push(s)
+      if (s.endTime > last.endTime) last.endTime = s.endTime
+    } else {
+      slots.push({ startTime: s.startTime, endTime: s.endTime, sessions: [s] })
+    }
+  }
+  return slots
+}
 
 export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap, onSelectSession }: Props) {
   const daySessions = sessions
     .filter(s => s.day === day)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
-  const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i)
+  const slots = useMemo(() => groupIntoSlots(daySessions), [daySessions])
 
-  // Detect overlapping groups for column layout
-  const columns = assignColumns(daySessions)
-
-  // Walk warnings for consecutive sessions on this day
   const dayWalkWarnings = useMemo(
     () => getWalkWarnings(daySessions, userData),
     [daySessions, userData]
   )
 
+  const warningsByTo = useMemo(() => {
+    const map = new Map<string, typeof dayWalkWarnings[0]>()
+    for (const w of dayWalkWarnings) map.set(w.toSession.id, w)
+    return map
+  }, [dayWalkWarnings])
+
+  if (daySessions.length === 0) {
+    return (
+      <div>
+        <h2 className="text-sm font-semibold text-gdc-accent mb-3">{DAY_LABELS[day]}</h2>
+        <p className="text-sm text-gdc-textMuted py-4">No sessions starred for this day</p>
+      </div>
+    )
+  }
+
   return (
     <div>
       <h2 className="text-sm font-semibold text-gdc-accent mb-3">{DAY_LABELS[day]}</h2>
 
-      {/* Walk warnings for this day */}
+      {/* Walk warnings summary */}
       {dayWalkWarnings.length > 0 && (
         <div className="space-y-1 mb-3">
           {dayWalkWarnings.map((w, i) => (
@@ -51,120 +79,126 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
               }`}
             >
               <span className="font-medium shrink-0">
-                {w.tight ? '!!' : '!'} {formatTime(w.fromSession.endTime)}→{formatTime(w.toSession.startTime)}
+                {w.tight ? '!!' : '!'} {formatTime(w.fromSession.endTime)}{'\u2192'}{formatTime(w.toSession.startTime)}
               </span>
               <span className="text-gdc-textMuted truncate">
-                {getZoneLabel(w.fromSession.room)} → {getZoneLabel(w.toSession.room)} ~{w.walkMinutes}min walk, {w.gapMinutes}min gap
+                {getZoneLabel(w.fromSession.room)} {'\u2192'} {getZoneLabel(w.toSession.room)} ~{w.walkMinutes}min walk, {w.gapMinutes}min gap
               </span>
             </div>
           ))}
         </div>
       )}
 
-      {daySessions.length === 0 ? (
-        <p className="text-sm text-gdc-textMuted py-4">No sessions starred for this day</p>
-      ) : (
-        <div className="relative" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>
-          {/* Hour lines */}
-          {hours.map(h => (
-            <div
-              key={h}
-              className="absolute left-0 right-0 border-t border-gdc-border/30 flex items-start"
-              style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
-            >
-              <span className="text-[10px] text-gdc-textMuted font-mono w-12 -mt-2 shrink-0">
-                {formatTime(`${h.toString().padStart(2, '0')}:00`)}
-              </span>
-            </div>
-          ))}
+      {/* Timeline */}
+      <div className="space-y-1">
+        {slots.map((slot, i) => {
+          const isConflict = slot.sessions.length > 1
+          const duration = getDurationMinutes(slot.startTime, slot.endTime)
 
-          {/* Sessions */}
-          {daySessions.map(session => {
-            const startMin = timeToMinutes(session.startTime) - START_HOUR * 60
-            const duration = getDurationMinutes(session.startTime, session.endTime)
-            const top = (startMin / 60) * HOUR_HEIGHT
-            const height = Math.max((duration / 60) * HOUR_HEIGHT - 2, 24)
-            const col = columns.get(session.id) ?? { col: 0, total: 1 }
-            const hasConflict = (conflictMap.get(session.id) ?? []).length > 0
-            const trackColor = TRACK_COLORS[session.track]
-            const borderColorClass = trackColor.split(' ').find(c => c.startsWith('border-')) ?? 'border-gdc-accent'
+          // Check for walk warning into this slot
+          const slotWarning = slot.sessions
+            .map(s => warningsByTo.get(s.id))
+            .find(w => w !== undefined)
 
-            return (
-              <div
-                key={session.id}
-                className={`absolute rounded-md p-1.5 text-xs overflow-hidden cursor-pointer
-                  hover:brightness-110 border-l-3
-                  ${hasConflict ? 'bg-red-500/10 border-red-500' : `bg-gdc-surface ${borderColorClass}`}`}
-                style={{
-                  top,
-                  height,
-                  left: `calc(3rem + ${(col.col / col.total) * 100}% * (1 - 3rem / 100%))`,
-                  width: `calc(${100 / col.total}% - 3rem / ${col.total} - 4px)`,
-                  borderLeftWidth: '3px',
-                }}
-                onClick={() => onSelectSession?.(session.id)}
-              >
-                <div className="flex items-start justify-between gap-1">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium leading-tight truncate">{session.title}</p>
-                    <p className="text-gdc-textMuted truncate">
-                      {formatTime(session.startTime)}-{formatTime(session.endTime)} | {session.room}
-                    </p>
-                  </div>
-                  <div className="shrink-0">
-                    <InterestRating
-                      level={userData[session.id]?.interest ?? 0}
-                      onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
-                      compact
-                    />
-                  </div>
+          return (
+            <div key={`${slot.startTime}-${i}`}>
+              {/* Walk warning divider */}
+              {slotWarning && i > 0 && (
+                <div className={`flex items-center gap-2 px-2 py-1 my-1 text-[10px] ${
+                  slotWarning.tight ? 'text-red-400' : 'text-amber-400'
+                }`}>
+                  <div className="flex-1 border-t border-dashed border-current opacity-40" />
+                  <span>~{slotWarning.walkMinutes}min walk</span>
+                  <div className="flex-1 border-t border-dashed border-current opacity-40" />
                 </div>
-                {height > 50 && (
-                  <p className="text-gdc-textMuted mt-0.5 truncate">{session.speakers.join(', ')}</p>
-                )}
-                {hasConflict && (
-                  <p className="text-red-400 text-[10px] mt-0.5 conflict-pulse">CONFLICT</p>
-                )}
+              )}
+
+              {/* Gap indicator between non-adjacent slots */}
+              {!slotWarning && i > 0 && (() => {
+                const prevSlot = slots[i - 1]
+                const gap = timeToMinutes(slot.startTime) - timeToMinutes(prevSlot.endTime)
+                if (gap > 15) {
+                  return (
+                    <div className="flex items-center gap-2 px-2 py-1 my-1 text-[10px] text-gdc-border">
+                      <div className="flex-1 border-t border-dashed border-current opacity-30" />
+                      <span>{gap}min free</span>
+                      <div className="flex-1 border-t border-dashed border-current opacity-30" />
+                    </div>
+                  )
+                }
+                return null
+              })()}
+
+              <div className={`card p-0 overflow-hidden ${isConflict ? 'ring-1 ring-amber-500/30' : ''}`}>
+                {/* Time header */}
+                <div className="flex items-center justify-between px-3 py-1.5 bg-gdc-bg/50 border-b border-gdc-border/30">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-medium">
+                      {formatTime(slot.startTime)}
+                    </span>
+                    <span className="text-[10px] text-gdc-textMuted">
+                      {duration}min {'\u2192'} {formatTime(slot.endTime)}
+                    </span>
+                  </div>
+                  {isConflict && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-medium">
+                      {slot.sessions.length} options
+                    </span>
+                  )}
+                </div>
+
+                {/* Session cards */}
+                <div className={isConflict ? 'divide-y divide-gdc-border/30' : ''}>
+                  {slot.sessions.map(session => {
+                    const interest = userData[session.id]?.interest ?? 0
+                    const trackColor = TRACK_COLORS[session.track]
+                    const hasConflict = (conflictMap.get(session.id) ?? []).length > 0
+                    const zone = getZoneLabel(session.room)
+
+                    return (
+                      <div
+                        key={session.id}
+                        className="px-3 py-2 cursor-pointer hover:bg-gdc-surfaceHover/50 active:bg-gdc-surfaceHover transition-colors"
+                        onClick={() => onSelectSession?.(session.id)}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-sm font-semibold leading-snug">{session.title}</h3>
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              <span className={`track-badge ${trackColor} text-[10px]`}>
+                                {session.track}
+                              </span>
+                              <span className="text-[10px] text-gdc-textMuted">
+                                {session.room}
+                                <span className="opacity-60 ml-0.5">({zone})</span>
+                              </span>
+                            </div>
+                            {session.speakers.length > 0 && (
+                              <p className="text-[11px] text-gdc-textMuted mt-0.5 truncate">
+                                {session.speakers.join(', ')}
+                              </p>
+                            )}
+                            {hasConflict && (
+                              <p className="text-red-400 text-[10px] mt-0.5 font-medium conflict-pulse">CONFLICT</p>
+                            )}
+                          </div>
+                          <div className="shrink-0" onClick={e => e.stopPropagation()}>
+                            <InterestRating
+                              level={interest}
+                              onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
+                              compact
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            )
-          })}
-        </div>
-      )}
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
-}
-
-function assignColumns(sessions: Session[]): Map<string, { col: number; total: number }> {
-  const result = new Map<string, { col: number; total: number }>()
-  const sorted = [...sessions].sort((a, b) => a.startTime.localeCompare(b.startTime))
-
-  // Find overlapping groups
-  const groups: Session[][] = []
-  let currentGroup: Session[] = []
-
-  for (const s of sorted) {
-    if (currentGroup.length === 0) {
-      currentGroup.push(s)
-    } else {
-      const overlaps = currentGroup.some(existing =>
-        timeToMinutes(s.startTime) < timeToMinutes(existing.endTime)
-      )
-      if (overlaps) {
-        currentGroup.push(s)
-      } else {
-        groups.push(currentGroup)
-        currentGroup = [s]
-      }
-    }
-  }
-  if (currentGroup.length > 0) groups.push(currentGroup)
-
-  for (const group of groups) {
-    const total = group.length
-    group.forEach((s, i) => {
-      result.set(s.id, { col: i, total })
-    })
-  }
-
-  return result
 }

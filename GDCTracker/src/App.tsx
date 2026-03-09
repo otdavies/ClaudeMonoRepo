@@ -137,9 +137,9 @@ export default function App() {
           <nav className="flex gap-1">
             {([
               ['browse', 'Browse'],
-              ['schedule', 'Schedule'],
-              ['up-next', 'Up Next'],
               ['swipe', 'Swipe'],
+              ['up-next', 'Up Next'],
+              ['schedule', 'Schedule'],
             ] as const).map(([v, label]) => (
               <button
                 key={v}
