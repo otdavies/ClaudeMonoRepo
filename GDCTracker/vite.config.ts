@@ -38,8 +38,8 @@ export default defineConfig({
         background_color: '#0f1117',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/ClaudeMonoRepo/',
-        scope: '/ClaudeMonoRepo/',
+        start_url: '/GDC/',
+        scope: '/GDC/',
         icons: [
           {
             src: 'pwa-192x192.svg',
@@ -61,7 +61,7 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/ClaudeMonoRepo/',
+  base: '/GDC/',
   build: {
     outDir: 'dist',
   },

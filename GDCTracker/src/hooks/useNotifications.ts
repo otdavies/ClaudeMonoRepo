@@ -55,7 +55,7 @@ export function useNotifications(
           new Notification(`${session.title}`, {
             body: `Starts in ${REMINDER_MINUTES} min at ${formatTime(session.startTime)} in ${session.room}\n${interestLabel} | ${session.track}`,
             tag: session.id,
-            icon: '/ClaudeMonoRepo/pwa-192x192.svg',
+            icon: '/GDC/pwa-192x192.svg',
           })
         }, delay)
         timersRef.current.push(timer)
