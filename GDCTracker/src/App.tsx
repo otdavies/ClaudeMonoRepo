@@ -14,6 +14,7 @@ import { UpNextView } from './components/UpNextView'
 import { SwipeView } from './components/SwipeView'
 import { SessionDetailModal } from './components/SessionDetailModal'
 import { ProfileSetup } from './components/ProfileSetup'
+import { Onboarding } from './components/Onboarding'
 import { useNotifications } from './hooks/useNotifications'
 
 const DEFAULT_FILTERS: FilterState = {
@@ -43,6 +44,7 @@ export default function App() {
   const [browseMode, setBrowseMode] = useState<BrowseMode>('timeline')
   const [swipeMode, setSwipeMode] = useState(false)
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useLocalStorage<boolean>('gdc2026-onboarded', false)
 
   // User profile (name + color)
   const { profile, saveProfile } = useProfile()
@@ -124,6 +126,11 @@ export default function App() {
   // Show profile setup on first visit
   if (!profile) {
     return <ProfileSetup onSave={saveProfile} />
+  }
+
+  // Show onboarding after profile setup
+  if (!hasSeenOnboarding) {
+    return <Onboarding onDone={() => setHasSeenOnboarding(true)} />
   }
 
   return (

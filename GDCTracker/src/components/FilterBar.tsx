@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { FilterState, Track, SessionFormat, Day, ALL_TRACKS, ALL_FORMATS, ALL_DAYS, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
 import type { BrowseMode } from './SessionList'
 
@@ -16,7 +16,7 @@ interface Props {
 // --- Toggle component ---
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
-    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+    <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
       <button
         role="switch"
         aria-checked={checked}
@@ -33,6 +33,17 @@ function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: 
 
 export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseMode, swipeActive, onBrowseModeChange, onSwipeChange }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
+  const searchRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (showSearch && searchRef.current) searchRef.current.focus()
+  }, [showSearch])
+
+  // Close search when cleared and blurred
+  const handleSearchBlur = () => {
+    if (!filters.search) setShowSearch(false)
+  }
 
   const toggleTrack = (t: Track) => {
     const tracks = filters.tracks.includes(t)
@@ -66,12 +77,14 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
       hideConflicts: false,
       timeRange: null,
     })
+    setShowSearch(false)
   }
 
   const hasActiveFilters = filters.search || filters.tracks.length > 0 || filters.formats.length > 0 ||
     filters.days.length > 0 || filters.interestMin > 0 || filters.scheduledOnly || filters.timeRange
 
   const activeFilterCount = [
+    filters.search.length > 0,
     filters.tracks.length > 0,
     filters.formats.length > 0,
     filters.days.length > 0,
@@ -82,38 +95,86 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
 
   return (
     <div className="space-y-2">
-      {/* Top bar: view modes + session count */}
-      <div className="flex items-center justify-between gap-2">
+      {/* Single toolbar row: view modes + actions */}
+      <div className="flex items-center gap-1.5">
         <BrowseModeControl
           value={browseMode}
           swipeActive={swipeActive}
           onChange={onBrowseModeChange}
           onSwipe={onSwipeChange}
         />
-        <span className="text-[10px] text-gdc-textMuted/60 tabular-nums shrink-0">
+
+        <div className="flex-1" />
+
+        <Toggle
+          checked={filters.scheduledOnly}
+          onChange={checked => onUpdate({ ...filters, scheduledOnly: checked })}
+          label="Starred"
+        />
+
+        {/* Search toggle */}
+        <button
+          onClick={() => setShowSearch(!showSearch)}
+          className={`p-1.5 rounded-lg transition-all duration-150 shrink-0 ${
+            showSearch || filters.search
+              ? 'bg-gdc-accent/10 text-gdc-accent'
+              : 'text-gdc-textMuted/60 hover:text-gdc-text'
+          }`}
+          title="Search"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+        </button>
+
+        {/* Filters toggle */}
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className={`p-1.5 rounded-lg transition-all duration-150 shrink-0 relative ${
+            showAdvanced
+              ? 'bg-gdc-accent/10 text-gdc-accent'
+              : 'text-gdc-textMuted/60 hover:text-gdc-text'
+          }`}
+          title="Filters"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+          {activeFilterCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-3.5 bg-gdc-accent text-white text-[9px] rounded-full flex items-center justify-center font-medium">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+
+        {/* Session count */}
+        <span className="text-[10px] text-gdc-textMuted/40 tabular-nums shrink-0">
           {sessionCount === totalCount
-            ? `${totalCount} sessions`
-            : `${sessionCount} / ${totalCount}`}
+            ? `${totalCount}`
+            : `${sessionCount}/${totalCount}`}
         </span>
       </div>
 
-      {/* Search + toggle + filter controls */}
-      <div className="flex items-center gap-1.5">
-        <div className="relative flex-1">
-          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gdc-textMuted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8" strokeWidth="2" />
-            <path d="m21 21-4.35-4.35" strokeWidth="2" />
+      {/* Expandable search bar */}
+      {showSearch && (
+        <div className="relative">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gdc-textMuted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
           </svg>
           <input
+            ref={searchRef}
             type="text"
             value={filters.search}
             onChange={e => onUpdate({ ...filters, search: e.target.value })}
-            placeholder="Search sessions, speakers..."
+            onBlur={handleSearchBlur}
+            placeholder="Search sessions, speakers, tags..."
             className="input pl-8 py-1.5 text-xs"
           />
           {filters.search && (
             <button
-              onClick={() => onUpdate({ ...filters, search: '' })}
+              onClick={() => { onUpdate({ ...filters, search: '' }); searchRef.current?.focus() }}
               className="absolute right-2 top-1/2 -translate-y-1/2 text-gdc-textMuted/50 hover:text-gdc-text"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
@@ -122,34 +183,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
             </button>
           )}
         </div>
-        <Toggle
-          checked={filters.scheduledOnly}
-          onChange={checked => onUpdate({ ...filters, scheduledOnly: checked })}
-          label="Starred"
-        />
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 border shrink-0 ${
-            showAdvanced
-              ? 'bg-gdc-accent/10 text-gdc-accent border-gdc-accent/30'
-              : 'text-gdc-textMuted border-gdc-border/40 hover:text-gdc-text hover:border-gdc-border/60'
-          }`}
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-            <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-          </svg>
-          {activeFilterCount > 0 && (
-            <span className="min-w-[14px] h-3.5 bg-gdc-accent/20 text-gdc-accent text-[9px] rounded-full flex items-center justify-center font-medium">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-        {hasActiveFilters && (
-          <button onClick={clearAll} className="text-[10px] text-gdc-danger/70 hover:text-gdc-danger transition-colors shrink-0">
-            Clear
-          </button>
-        )}
-      </div>
+      )}
 
       {/* Advanced filters */}
       {showAdvanced && (
@@ -248,6 +282,13 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
               )}
             </div>
           </FilterSection>
+
+          {/* Clear all */}
+          {hasActiveFilters && (
+            <button onClick={clearAll} className="text-[10px] text-gdc-danger/70 hover:text-gdc-danger transition-colors">
+              Clear all filters
+            </button>
+          )}
         </div>
       )}
     </div>
