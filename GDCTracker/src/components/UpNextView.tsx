@@ -135,6 +135,27 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
     return groupByStartTime(sorted)
   }, [starredSessions])
 
+  // Set of session IDs blocked by a picked session in a *different* time slot
+  const blockedByPick = useMemo(() => {
+    const picked = starredSessions.filter(s => userData[s.id]?.picked)
+    const blocked = new Set<string>()
+    for (const s of starredSessions) {
+      if (userData[s.id]?.picked) continue
+      const sStart = timeToMinutes(s.startTime)
+      const sEnd = timeToMinutes(s.endTime)
+      for (const p of picked) {
+        if (p.day !== s.day) continue
+        const pStart = timeToMinutes(p.startTime)
+        const pEnd = timeToMinutes(p.endTime)
+        if (sStart < pEnd && sEnd > pStart) {
+          blocked.add(s.id)
+          break
+        }
+      }
+    }
+    return blocked
+  }, [starredSessions, userData])
+
   // Pick a session: auto-unpick any overlapping picked sessions on the same day
   const pickSession = useCallback((targetId: string) => {
     const target = sessions.find(s => s.id === targetId)
@@ -329,8 +350,8 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                   const friends = getAttendees?.(session.id) ?? []
                   const allPeople = getAllAttendees?.(session.id) ?? []
 
-                  // Collapsed: unpicked session in a slot that has a pick
-                  const collapsed = isChoice && hasPick && !picked
+                  // Collapsed: unpicked session in a slot that has a pick, OR blocked by a pick in another slot
+                  const collapsed = (!picked && hasPick && isChoice) || (!picked && blockedByPick.has(session.id))
 
                   if (collapsed) {
                     return (
