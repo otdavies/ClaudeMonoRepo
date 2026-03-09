@@ -1,10 +1,10 @@
 import { memo } from 'react'
 import { InterestLevel } from '../types'
 
-const LEVELS: { level: InterestLevel; label: string; color: string; activeColor: string; bg: string }[] = [
-  { level: 1, label: 'Maybe', color: 'text-slate-400', activeColor: 'text-slate-300', bg: 'bg-slate-400/10' },
-  { level: 2, label: 'Want', color: 'text-amber-400', activeColor: 'text-amber-300', bg: 'bg-amber-400/10' },
-  { level: 3, label: 'Must', color: 'text-rose-400', activeColor: 'text-rose-300', bg: 'bg-rose-400/10' },
+const LEVELS: { level: InterestLevel; label: string; color: string; bg: string; border: string }[] = [
+  { level: 1, label: 'Maybe', color: 'text-slate-400', bg: 'bg-slate-400/10', border: 'border-slate-500/25' },
+  { level: 2, label: 'Want', color: 'text-amber-400', bg: 'bg-amber-400/10', border: 'border-amber-500/25' },
+  { level: 3, label: 'Must', color: 'text-rose-400', bg: 'bg-rose-400/10', border: 'border-rose-500/25' },
 ]
 
 interface Props {
@@ -15,8 +15,15 @@ interface Props {
 
 export const InterestRating = memo(function InterestRating({ level, onChange, compact }: Props) {
   return (
-    <div className="flex items-center gap-0.5" onClick={e => e.stopPropagation()}>
-      {LEVELS.map(({ level: n, label, color, bg }) => {
+    <div
+      className={`inline-flex items-center gap-0.5 rounded-lg border transition-all duration-150 ${compact ? 'px-1 py-0.5' : 'px-1.5 py-1'} ${
+        level > 0
+          ? `${LEVELS[level - 1].bg} ${LEVELS[level - 1].border}`
+          : 'bg-gdc-bg/50 border-gdc-border/30 hover:border-gdc-border/50'
+      }`}
+      onClick={e => e.stopPropagation()}
+    >
+      {LEVELS.map(({ level: n, label, color }) => {
         const filled = n <= level
         return (
           <button
@@ -25,10 +32,10 @@ export const InterestRating = memo(function InterestRating({ level, onChange, co
               e.stopPropagation()
               onChange(level === n ? 0 : n)
             }}
-            className={`star-btn rounded-md transition-all duration-150 ${compact ? 'p-1' : 'p-1.5'} ${
+            className={`star-btn rounded transition-all duration-150 ${compact ? 'p-0.5' : 'p-0.5'} ${
               filled
-                ? `${color} ${bg}`
-                : 'text-gdc-textMuted/50 hover:text-gdc-textMuted/80'
+                ? color
+                : 'text-gdc-textMuted/40 hover:text-gdc-textMuted/70'
             }`}
             title={label}
             aria-label={`Set interest to ${label}`}
