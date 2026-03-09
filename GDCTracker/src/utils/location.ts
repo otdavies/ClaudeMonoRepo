@@ -8,15 +8,15 @@ import { timeToMinutes } from './conflicts'
 // Commons: "GDC Commons" areas (adjacent to South Hall)
 // Offsite: YBCA, Metreon, Yerba Buena Gardens, Oracle Park, etc.
 
-type Building = 'west' | 'south' | 'north' | 'commons' | 'offsite'
+export type Building = 'west' | 'south' | 'north' | 'commons' | 'offsite'
 
-interface RoomLocation {
+export interface RoomLocation {
   building: Building
   floor: number    // 1, 2, 3 within building
   roomNum: number  // parsed room number, 0 if named room
 }
 
-function parseRoom(room: string): RoomLocation {
+export function parseRoom(room: string): RoomLocation {
   const lower = room.toLowerCase()
 
   // Offsite venues

@@ -1,9 +1,10 @@
-import { useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Session, UserSessionData, TRACK_COLORS, InterestLevel, DAY_LABELS } from '../types'
 import { formatTimeRange, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
 import { generateGoogleCalendarURL } from '../utils/calendar'
 import { getZoneLabel } from '../utils/location'
+import { VenueMap } from './VenueMap'
 import { AttendeeInfo } from '../hooks/useAttendance'
 
 interface Props {
@@ -22,6 +23,7 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
   const duration = getDurationMinutes(session.startTime, session.endTime)
   const zone = getZoneLabel(session.room)
   const attendees = getAttendees?.(session.id) ?? []
+  const [showMap, setShowMap] = useState(false)
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose()
@@ -75,12 +77,21 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
             <p className="text-sm text-gdc-textMuted">{session.speakers.join(', ')}</p>
           )}
 
-          {/* Format + Room */}
+          {/* Format + Room + Map */}
           <div className="flex items-center gap-2 text-xs text-gdc-textMuted">
             <span>{session.format}</span>
             <span className="text-gdc-textMuted/40">|</span>
             <span>{session.room}</span>
             <span className="text-[10px] opacity-60">({zone})</span>
+            <button
+              onClick={() => setShowMap(true)}
+              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gdc-accent/10 text-gdc-accent text-[10px] font-medium hover:bg-gdc-accent/20 transition-colors"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+              Map
+            </button>
           </div>
 
           {/* Interest rating */}
@@ -155,6 +166,10 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
           />
         </div>
       </div>
+
+      {showMap && (
+        <VenueMap room={session.room} onClose={() => setShowMap(false)} />
+      )}
     </div>
   )
 }
