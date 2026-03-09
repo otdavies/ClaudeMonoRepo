@@ -79,7 +79,7 @@ function GapIndicator({
       </div>
 
       {expanded && (
-        <div className="mx-2 mb-1 rounded-lg border border-gdc-border/20 bg-gdc-surface/30 overflow-hidden divide-y divide-gdc-border/10">
+        <div className="mx-2 mb-1 rounded-lg border border-gdc-border/40 bg-gdc-surface/50 overflow-hidden divide-y divide-gdc-border/25">
           {gapSessions.map(s => {
             const trackColor = TRACK_COLORS[s.track]
             return (

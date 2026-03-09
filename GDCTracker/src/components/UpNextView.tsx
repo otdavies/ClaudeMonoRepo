@@ -306,7 +306,7 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
               isChoice && hasPick ? 'ring-1 ring-gdc-accent/30' : ''
             }`}>
               {/* Slot header */}
-              <div className={`flex items-center justify-between px-3 py-1.5 border-b border-gdc-border/30 ${
+              <div className={`flex items-center justify-between px-3 py-1.5 border-b border-gdc-border/50 ${
                 isNow ? 'bg-green-500/10' : isUpcoming ? 'bg-gdc-accent/15' : 'bg-gdc-bg/50'
               }`}>
                 <div className="flex items-center gap-2">
@@ -362,7 +362,7 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                       >
                         <button
                           onClick={(e) => { e.stopPropagation(); pickSession(session.id) }}
-                          className="shrink-0 w-4 h-4 rounded-full border-2 border-gdc-border hover:border-gdc-textMuted transition-colors"
+                          className="shrink-0 w-4 h-4 rounded-full border-2 border-gdc-textMuted/50 hover:border-gdc-textMuted transition-colors"
                           title="Tap to attend this session instead"
                         />
                         <span className="text-xs truncate flex-1">{session.title}</span>
@@ -388,7 +388,7 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                           className={`shrink-0 mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                             picked
                               ? 'bg-gdc-accent border-gdc-accent text-white'
-                              : 'border-gdc-border hover:border-gdc-textMuted'
+                              : 'border-gdc-textMuted/50 hover:border-gdc-textMuted'
                           }`}
                           title={picked ? 'Attending — tap to unpick' : 'Tap to attend this session'}
                         >

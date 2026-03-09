@@ -60,7 +60,7 @@
   }
 
   .card {
-    @apply bg-gdc-surface/70 border border-gdc-border/40 rounded-xl;
+    @apply bg-gdc-surface/80 border border-gdc-border/60 rounded-xl;
   }
 
   .session-time {
@@ -101,7 +101,7 @@
   }
 
   .toggle-switch[data-checked="false"] {
-    @apply bg-gdc-border;
+    @apply bg-gdc-border/80;
   }
 
   .toggle-knob {
@@ -127,7 +127,7 @@
   }
 
   .pill-inactive {
-    @apply pill bg-gdc-bg/80 text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover;
+    @apply pill bg-gdc-surface/60 text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover;
   }
 
   .conflict-pulse {

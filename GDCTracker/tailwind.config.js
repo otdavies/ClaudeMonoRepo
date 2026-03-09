@@ -5,15 +5,15 @@ export default {
     extend: {
       colors: {
         gdc: {
-          bg: '#0f1117',
-          surface: '#1a1d27',
-          surfaceHover: '#232736',
-          border: '#2a2e3d',
+          bg: '#131620',
+          surface: '#1e2230',
+          surfaceHover: '#2a2f42',
+          border: '#3a3f54',
           accent: '#6366f1',
           accentHover: '#818cf8',
           gold: '#f59e0b',
           text: '#e2e8f0',
-          textMuted: '#94a3b8',
+          textMuted: '#a1afc4',
           danger: '#ef4444',
           success: '#22c55e',
         },

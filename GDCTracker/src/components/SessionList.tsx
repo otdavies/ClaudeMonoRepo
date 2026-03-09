@@ -91,7 +91,7 @@ function TimelineView({ sessions, userData, onUpdateUserData, conflictMap, onSel
           label={DAY_LABELS[day]}
           count={slots.reduce((n, s) => n + s.sessions.length, 0)}
         >
-          <div className="space-y-0.5 ml-0 sm:ml-2 border-l border-gdc-border/20 pl-2 sm:pl-3">
+          <div className="space-y-0.5 ml-0 sm:ml-2 border-l border-gdc-border/40 pl-2 sm:pl-3">
             {slots.map(({ time, sessions: slotSessions }) => {
               const hasOverlap = slotSessions.length > 1
               return (

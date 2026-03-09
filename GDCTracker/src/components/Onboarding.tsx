@@ -9,7 +9,7 @@ const STEPS = [
         {/* Illustrative tab bar */}
         <div className="flex gap-1 opacity-70">
           {['Timeline', 'Tracks', 'Compact'].map((t, i) => (
-            <span key={t} className={`text-[11px] px-3 py-1 rounded-md font-medium ${i === 0 ? 'bg-gdc-accent/15 text-gdc-accent' : 'text-gdc-textMuted/40'}`}>{t}</span>
+            <span key={t} className={`text-[11px] px-3 py-1 rounded-md font-medium ${i === 0 ? 'bg-gdc-accent/15 text-gdc-accent' : 'text-gdc-textMuted/60'}`}>{t}</span>
           ))}
         </div>
         {/* Illustrative session list */}
@@ -19,9 +19,9 @@ const STEPS = [
             { time: '10:00', title: 'AI for NPCs', track: 'AI Summit', color: 'bg-purple-500/15 text-purple-400/70' },
             { time: '11:30', title: 'Narrative Design', track: 'Design', color: 'bg-green-500/15 text-green-400/70' },
           ].map((s, i) => (
-            <div key={i} className="bg-gdc-bg/60 border border-gdc-border/20 rounded-lg px-3 py-2 flex items-center gap-2">
-              <span className="text-[10px] font-mono text-gdc-textMuted/40 shrink-0">{s.time}</span>
-              <span className="text-[11px] text-gdc-text/60 flex-1 truncate">{s.title}</span>
+            <div key={i} className="bg-gdc-bg/60 border border-gdc-border/40 rounded-lg px-3 py-2 flex items-center gap-2">
+              <span className="text-[10px] font-mono text-gdc-textMuted/60 shrink-0">{s.time}</span>
+              <span className="text-[11px] text-gdc-text/70 flex-1 truncate">{s.title}</span>
               <span className={`text-[9px] px-1.5 py-0.5 rounded shrink-0 ${s.color}`}>{s.track}</span>
             </div>
           ))}
@@ -43,7 +43,7 @@ const STEPS = [
             <div key={label} className={`flex items-center gap-3 ${bg} border rounded-lg px-4 py-2.5`}>
               <div className="flex gap-0.5">
                 {[1, 2, 3].map(n => (
-                  <svg key={n} className={`w-4 h-4 ${n <= stars ? color : 'text-gdc-border/20'}`} viewBox="0 0 24 24" fill={n <= stars ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={n <= stars ? '0' : '1.5'}>
+                  <svg key={n} className={`w-4 h-4 ${n <= stars ? color : 'text-gdc-border/40'}`} viewBox="0 0 24 24" fill={n <= stars ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={n <= stars ? '0' : '1.5'}>
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
@@ -52,7 +52,7 @@ const STEPS = [
             </div>
           ))}
         </div>
-        <p className="text-[10px] text-gdc-textMuted/40 text-center italic">Tip: Use Swipe mode to quickly rate sessions</p>
+        <p className="text-[10px] text-gdc-textMuted/60 text-center italic">Tip: Use Swipe mode to quickly rate sessions</p>
       </div>
     ),
   },
@@ -64,21 +64,21 @@ const STEPS = [
         {/* Illustrative nav */}
         <div className="flex gap-1 w-full max-w-[260px] opacity-70">
           {['Browse', 'Decide', 'Schedule'].map((t, i) => (
-            <span key={t} className={`flex-1 text-center text-[11px] py-1.5 rounded-md font-medium ${i === 1 ? 'bg-gdc-accent/15 text-gdc-accent' : 'text-gdc-textMuted/40'}`}>{t}</span>
+            <span key={t} className={`flex-1 text-center text-[11px] py-1.5 rounded-md font-medium ${i === 1 ? 'bg-gdc-accent/15 text-gdc-accent' : 'text-gdc-textMuted/60'}`}>{t}</span>
           ))}
         </div>
         {/* Illustrative conflict block */}
         <div className="w-full max-w-[260px] space-y-1.5 opacity-80">
-          <div className="text-[10px] text-gdc-textMuted/40 mb-0.5 italic">Wed 10:00 AM — Pick one:</div>
+          <div className="text-[10px] text-gdc-textMuted/60 mb-0.5 italic">Wed 10:00 AM — Pick one:</div>
           {[
             { title: 'Next-Gen Rendering', picked: true },
             { title: 'AI for NPCs', picked: false },
           ].map((s, i) => (
-            <div key={i} className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${s.picked ? 'bg-gdc-accent/5 border-gdc-accent/20' : 'bg-gdc-bg/40 border-gdc-border/15'}`}>
-              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${s.picked ? 'border-gdc-accent/60 bg-gdc-accent/60' : 'border-gdc-border/30'}`}>
+            <div key={i} className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${s.picked ? 'bg-gdc-accent/10 border-gdc-accent/30' : 'bg-gdc-bg/40 border-gdc-border/40'}`}>
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${s.picked ? 'border-gdc-accent/70 bg-gdc-accent/70' : 'border-gdc-textMuted/40'}`}>
                 {s.picked && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3"><path d="M5 13l4 4L19 7" /></svg>}
               </div>
-              <span className={`text-[11px] ${s.picked ? 'text-gdc-text/70' : 'text-gdc-textMuted/40'}`}>{s.title}</span>
+              <span className={`text-[11px] ${s.picked ? 'text-gdc-text/80' : 'text-gdc-textMuted/60'}`}>{s.title}</span>
             </div>
           ))}
         </div>
@@ -142,7 +142,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
           {!isLast && (
             <button
               onClick={onDone}
-              className="w-full text-center text-[10px] text-gdc-textMuted/40 hover:text-gdc-textMuted mt-3 transition-colors"
+              className="w-full text-center text-[10px] text-gdc-textMuted/60 hover:text-gdc-textMuted mt-3 transition-colors"
             >
               Skip intro
             </button>

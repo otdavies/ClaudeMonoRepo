@@ -87,7 +87,7 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
                 {hours.map(h => (
                   <div
                     key={h}
-                    className="absolute left-0 right-0 border-t border-gdc-border/20"
+                    className="absolute left-0 right-0 border-t border-gdc-border/35"
                     style={{ top: (h - START_HOUR) * HOUR_HEIGHT }}
                   />
                 ))}
