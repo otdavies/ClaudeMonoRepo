@@ -165,7 +165,7 @@ export default function App() {
           </div>
 
           {/* Nav tabs */}
-          <nav className="flex gap-0.5 mt-2 -mb-px">
+          <nav className="flex mt-2 -mb-px">
             {([
               ['browse', 'Browse', <svg key="b" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>],
               ['up-next', 'Decide', <svg key="d" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5h6M9 14l2 2 4-4" /></svg>],
@@ -174,7 +174,7 @@ export default function App() {
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
+                className={`relative flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
                   view === v
                     ? 'bg-gdc-accent/12 text-gdc-accent'
                     : 'text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover'
