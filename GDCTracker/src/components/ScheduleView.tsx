@@ -18,8 +18,9 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
   const [mode, setMode] = useState<'day' | 'week'>('day')
   const [selectedDay, setSelectedDay] = useState<Day>('Wed')
 
-  // interest > 0 = scheduled
+  // interest > 0 = starred, picked = attending
   const scheduledSessions = sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0)
+  const pickedCount = sessions.filter(s => userData[s.id]?.picked).length
 
   return (
     <div className="space-y-3">
@@ -43,7 +44,7 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
         {mode === 'day' && (
           <div className="flex gap-1">
             {ALL_DAYS.map(d => {
-              const count = scheduledSessions.filter(s => s.day === d).length
+              const count = sessions.filter(s => s.day === d && userData[s.id]?.picked).length
               return (
                 <button
                   key={d}
@@ -69,10 +70,10 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
         )}
       </div>
 
-      {scheduledSessions.length === 0 ? (
+      {pickedCount === 0 ? (
         <div className="text-center py-12 text-gdc-textMuted">
-          <p className="text-lg mb-1">No sessions starred yet</p>
-          <p className="text-sm">Star sessions in Browse or Swipe to build your schedule</p>
+          <p className="text-lg mb-1">No sessions picked yet</p>
+          <p className="text-sm">Pick sessions to attend in the Decide tab</p>
         </div>
       ) : mode === 'day' ? (
         <DaySchedule

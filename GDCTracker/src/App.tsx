@@ -168,7 +168,7 @@ export default function App() {
             {([
               ['browse', 'Browse'],
               ['swipe', 'Swipe'],
-              ['up-next', 'Up Next'],
+              ['up-next', 'Decide'],
               ['schedule', 'Schedule'],
             ] as const).map(([v, label]) => (
               <button

@@ -161,11 +161,8 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
             )?.room ?? null
           : null
 
-        // Sort: picked first, then stars desc, then distance
+        // Sort: stars desc, then distance (don't reorder by picked)
         const sortedSessions = [...slot.sessions].sort((a, b) => {
-          const aPicked = userData[a.id]?.picked ? 1 : 0
-          const bPicked = userData[b.id]?.picked ? 1 : 0
-          if (bPicked !== aPicked) return bPicked - aPicked
           const starDiff = (userData[b.id]?.interest ?? 0) - (userData[a.id]?.interest ?? 0)
           if (starDiff !== 0) return starDiff
           if (!prevBestRoom) return 0
@@ -219,15 +216,34 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                   const friends = getAttendees?.(session.id) ?? []
                   const allPeople = getAllAttendees?.(session.id) ?? []
 
+                  // Collapsed: unpicked session in a slot that has a pick
+                  const collapsed = isChoice && hasPick && !picked
+
+                  if (collapsed) {
+                    return (
+                      <div
+                        key={session.id}
+                        className="relative flex items-center gap-2 px-3 py-1 opacity-40 cursor-pointer hover:opacity-60 transition-opacity"
+                        onClick={() => onSelectSession?.(session.id)}
+                      >
+                        <button
+                          onClick={(e) => { e.stopPropagation(); pickSession(session.id) }}
+                          className="shrink-0 w-4 h-4 rounded-full border-2 border-gdc-border hover:border-gdc-textMuted transition-colors"
+                          title="Tap to attend this session instead"
+                        />
+                        <span className="text-xs truncate flex-1">{session.title}</span>
+                        <span className={`track-badge ${trackColor} text-[9px] shrink-0`}>
+                          {session.track}
+                        </span>
+                      </div>
+                    )
+                  }
+
                   return (
                     <div
                       key={session.id}
                       className={`relative px-3 py-2 transition-colors ${
-                        picked
-                          ? 'bg-gdc-accent/5'
-                          : isChoice && hasPick
-                          ? 'opacity-50'
-                          : ''
+                        picked ? 'bg-gdc-accent/5' : ''
                       }`}
                     >
                       <AttendeeStrip attendees={allPeople} />
