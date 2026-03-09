@@ -129,35 +129,35 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-gdc-bg/95 backdrop-blur-sm border-b border-gdc-border">
+      <header className="sticky top-0 z-50 bg-gdc-bg/90 backdrop-blur-md border-b border-gdc-border/50">
         <div className="max-w-4xl mx-auto px-3 py-2">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold">GDC 2026</h1>
-              <span className="text-xs text-gdc-textMuted hidden sm:inline">March 9-13 | San Francisco</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-sm font-bold tracking-tight">GDC 2026</h1>
+              <span className="text-[10px] text-gdc-textMuted/70 hidden sm:inline">Mar 9–13 · San Francisco</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {'Notification' in window && Notification.permission !== 'granted' && (
                 <button
                   onClick={requestPermission}
-                  className="text-[10px] text-gdc-textMuted hover:text-gdc-accent"
+                  className="text-[10px] text-gdc-textMuted hover:text-gdc-accent transition-colors p-1"
                   title="Enable session reminders"
                 >
-                  Notify
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
                 </button>
               )}
               {scheduledCount > 0 && (
-                <span className="text-xs bg-gdc-accent/20 text-gdc-accent px-2 py-0.5 rounded-full">
-                  {scheduledCount} starred
+                <span className="text-[10px] bg-gdc-accent/10 text-gdc-accent/90 px-1.5 py-0.5 rounded-md font-medium">
+                  {scheduledCount}
                 </span>
               )}
-              {/* Profile indicator */}
               <button
-                onClick={() => setSelectedSession(null)} // handled below
-                className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold"
+                onClick={() => setSelectedSession(null)}
+                className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center text-white text-[9px] font-bold ring-1 ring-white/10"
                 style={{ backgroundColor: profile.color }}
                 title={`${profile.name} — tap to edit profile`}
-                // We use a separate state for profile editing
               >
                 {profile.name.charAt(0).toUpperCase()}
               </button>
@@ -165,25 +165,30 @@ export default function App() {
           </div>
 
           {/* Nav tabs */}
-          <nav className="flex gap-1">
+          <nav className="flex gap-0.5 mt-2 -mb-px">
             {([
-              ['browse', 'Browse'],
-              ['up-next', 'Decide'],
-              ['schedule', 'Schedule'],
-            ] as const).map(([v, label]) => (
+              ['browse', 'Browse', <svg key="b" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>],
+              ['up-next', 'Decide', <svg key="d" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5h6M9 14l2 2 4-4" /></svg>],
+              ['schedule', 'Schedule', <svg key="s" className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>],
+            ] as const).map(([v, label, icon]) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
-                className={`${view === v ? 'tab-active' : 'tab-inactive'} relative`}
+                className={`relative flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
+                  view === v
+                    ? 'bg-gdc-accent/12 text-gdc-accent'
+                    : 'text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover'
+                }`}
               >
+                {icon}
                 {label}
                 {v === 'schedule' && scheduledCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-gdc-accent text-white text-[10px] rounded-full flex items-center justify-center">
+                  <span className="ml-0.5 min-w-[16px] h-4 bg-gdc-accent/20 text-gdc-accent text-[10px] rounded-full flex items-center justify-center font-medium">
                     {scheduledCount}
                   </span>
                 )}
                 {v === 'schedule' && conflictMap.size > 0 && (
-                  <span className="absolute -top-1 -left-1 w-2 h-2 bg-gdc-danger rounded-full conflict-pulse" />
+                  <span className="absolute -top-0.5 -left-0.5 w-2 h-2 bg-gdc-danger rounded-full conflict-pulse" />
                 )}
               </button>
             ))}
@@ -192,28 +197,23 @@ export default function App() {
       </header>
 
       {/* Main content */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-3 py-4">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-3 py-3">
         {view === 'browse' && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <BrowseModeControl
-                value={browseMode}
-                swipeActive={swipeMode}
-                onChange={setBrowseMode}
-                onSwipe={setSwipeMode}
-              />
-              {!swipeMode && (
-                <span className="text-[10px] text-gdc-textMuted shrink-0">
-                  {filteredSessions.length}/{allSessions.length}
-                </span>
-              )}
-            </div>
+          <div className="space-y-2.5">
             {swipeMode ? (
-              <SwipeView
-                sessions={allSessions}
-                userData={userData}
-                onUpdateUserData={updateUserData}
-              />
+              <>
+                <BrowseModeControl
+                  value={browseMode}
+                  swipeActive={swipeMode}
+                  onChange={setBrowseMode}
+                  onSwipe={setSwipeMode}
+                />
+                <SwipeView
+                  sessions={allSessions}
+                  userData={userData}
+                  onUpdateUserData={updateUserData}
+                />
+              </>
             ) : (
               <>
                 <FilterBar
@@ -221,6 +221,10 @@ export default function App() {
                   onUpdate={setFilters}
                   sessionCount={filteredSessions.length}
                   totalCount={allSessions.length}
+                  browseMode={browseMode}
+                  swipeActive={swipeMode}
+                  onBrowseModeChange={setBrowseMode}
+                  onSwipeChange={setSwipeMode}
                 />
                 <SessionList
                   sessions={filteredSessions}
@@ -272,8 +276,8 @@ export default function App() {
       )}
 
       {/* Footer */}
-      <footer className="border-t border-gdc-border py-2 text-center text-[10px] text-gdc-textMuted">
-        GDC Tracker 2026 | Session data is illustrative | Built for planning your GDC week
+      <footer className="border-t border-gdc-border/30 py-2 text-center text-[10px] text-gdc-textMuted/50">
+        Real GDC 2026 schedule data · Last updated Mar 8, 2026 · {allSessions.length} sessions
       </footer>
     </div>
   )

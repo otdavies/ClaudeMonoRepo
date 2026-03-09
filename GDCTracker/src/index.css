@@ -13,8 +13,8 @@
   }
 
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
@@ -22,11 +22,11 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-gdc-border rounded-full;
+    @apply bg-gdc-border/60 rounded-full;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gdc-textMuted;
+    @apply bg-gdc-textMuted/50;
   }
 }
 
@@ -36,30 +36,31 @@
   }
 
   .btn {
-    @apply px-3 py-1.5 rounded-md font-medium text-sm transition-colors duration-150
-           focus:outline-none focus:ring-2 focus:ring-gdc-accent focus:ring-offset-1 focus:ring-offset-gdc-bg;
+    @apply px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-150
+           focus:outline-none focus:ring-2 focus:ring-gdc-accent/50 focus:ring-offset-1 focus:ring-offset-gdc-bg;
   }
 
   .btn-primary {
-    @apply btn bg-gdc-accent text-white hover:bg-gdc-accentHover active:scale-95;
+    @apply btn bg-gdc-accent text-white hover:bg-gdc-accentHover active:scale-[0.97];
   }
 
   .btn-ghost {
-    @apply btn text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover active:scale-95;
+    @apply btn text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover active:scale-[0.97];
   }
 
   .btn-danger {
-    @apply btn bg-red-500/20 text-red-400 hover:bg-red-500/30 active:scale-95;
+    @apply btn bg-red-500/15 text-red-400 hover:bg-red-500/25 active:scale-[0.97];
   }
 
   .input {
-    @apply w-full bg-gdc-surface border border-gdc-border rounded-md px-3 py-2 text-sm
-           text-gdc-text placeholder-gdc-textMuted
-           focus:outline-none focus:ring-2 focus:ring-gdc-accent focus:border-transparent;
+    @apply w-full bg-gdc-surface/80 border border-gdc-border/60 rounded-lg px-3 py-2 text-sm
+           text-gdc-text placeholder-gdc-textMuted/60
+           focus:outline-none focus:ring-2 focus:ring-gdc-accent/40 focus:border-gdc-accent/40
+           transition-all duration-150;
   }
 
   .card {
-    @apply bg-gdc-surface border border-gdc-border rounded-lg;
+    @apply bg-gdc-surface/70 border border-gdc-border/40 rounded-xl;
   }
 
   .session-time {
@@ -75,16 +76,58 @@
            transition-colors duration-150 hover:brightness-110;
   }
 
+  /* --- Tabs --- */
   .tab {
-    @apply px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150;
+    @apply px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-150;
   }
 
   .tab-active {
-    @apply tab bg-gdc-accent text-white;
+    @apply tab bg-gdc-accent/15 text-gdc-accent;
   }
 
   .tab-inactive {
     @apply tab text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover;
+  }
+
+  /* --- Custom toggle switch --- */
+  .toggle-switch {
+    @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full
+           border-2 border-transparent transition-colors duration-200 ease-in-out
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-gdc-accent/50;
+  }
+
+  .toggle-switch[data-checked="true"] {
+    @apply bg-gdc-accent;
+  }
+
+  .toggle-switch[data-checked="false"] {
+    @apply bg-gdc-border;
+  }
+
+  .toggle-knob {
+    @apply pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm
+           ring-0 transition-transform duration-200 ease-in-out;
+  }
+
+  .toggle-switch[data-checked="true"] .toggle-knob {
+    @apply translate-x-4;
+  }
+
+  .toggle-switch[data-checked="false"] .toggle-knob {
+    @apply translate-x-0;
+  }
+
+  /* --- Pill selector (for filter chips) --- */
+  .pill {
+    @apply text-[11px] px-2.5 py-1 rounded-lg transition-all duration-150 cursor-pointer select-none;
+  }
+
+  .pill-active {
+    @apply pill bg-gdc-accent/15 text-gdc-accent font-medium;
+  }
+
+  .pill-inactive {
+    @apply pill bg-gdc-bg/80 text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover;
   }
 
   .conflict-pulse {

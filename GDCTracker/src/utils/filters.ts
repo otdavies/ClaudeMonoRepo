@@ -1,5 +1,21 @@
 import { Session, FilterState } from '../types'
 
+/**
+ * Smart keyword matching: short keywords (<=3 chars) use word-boundary matching
+ * so "AI" matches "AI/ML" and "AI " but not "training" or "contain".
+ * Longer keywords use substring matching as before.
+ */
+function matchKeyword(kw: string, text: string): boolean {
+  if (kw.length <= 3) {
+    // Word-boundary match: keyword must appear as a standalone word or delimited by
+    // non-alphanumeric chars (slashes, hyphens, spaces, punctuation, start/end)
+    const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const re = new RegExp(`(?:^|[^a-z0-9])${escaped}(?:[^a-z0-9]|$)`)
+    return re.test(text)
+  }
+  return text.includes(kw)
+}
+
 export function applyFilters(sessions: Session[], filters: FilterState): Session[] {
   return sessions.filter(s => {
     // Text search across title, description, speakers, tags
@@ -15,7 +31,7 @@ export function applyFilters(sessions: Session[], filters: FilterState): Session
       ].join(' ').toLowerCase()
       // Support multiple keywords separated by spaces (all must match)
       const keywords = q.split(/\s+/).filter(Boolean)
-      if (!keywords.every(kw => searchable.includes(kw))) return false
+      if (!keywords.every(kw => matchKeyword(kw, searchable))) return false
     }
 
     if (filters.tracks.length > 0 && !filters.tracks.includes(s.track)) return false

@@ -7,9 +7,31 @@ interface Props {
   onUpdate: (filters: FilterState) => void
   sessionCount: number
   totalCount: number
+  browseMode: BrowseMode
+  swipeActive: boolean
+  onBrowseModeChange: (v: BrowseMode) => void
+  onSwipeChange: (on: boolean) => void
 }
 
-export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props) {
+// --- Toggle component ---
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+      <button
+        role="switch"
+        aria-checked={checked}
+        onClick={() => onChange(!checked)}
+        className="toggle-switch"
+        data-checked={String(checked)}
+      >
+        <span className="toggle-knob" />
+      </button>
+      <span className="text-[11px] text-gdc-textMuted">{label}</span>
+    </label>
+  )
+}
+
+export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseMode, swipeActive, onBrowseModeChange, onSwipeChange }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   const toggleTrack = (t: Track) => {
@@ -49,12 +71,36 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
   const hasActiveFilters = filters.search || filters.tracks.length > 0 || filters.formats.length > 0 ||
     filters.days.length > 0 || filters.interestMin > 0 || filters.scheduledOnly || filters.timeRange
 
+  const activeFilterCount = [
+    filters.tracks.length > 0,
+    filters.formats.length > 0,
+    filters.days.length > 0,
+    filters.interestMin > 0,
+    filters.scheduledOnly,
+    filters.timeRange != null,
+  ].filter(Boolean).length
+
   return (
     <div className="space-y-2">
-      {/* Search bar */}
-      <div className="flex gap-2">
+      {/* Top bar: view modes + session count */}
+      <div className="flex items-center justify-between gap-2">
+        <BrowseModeControl
+          value={browseMode}
+          swipeActive={swipeActive}
+          onChange={onBrowseModeChange}
+          onSwipe={onSwipeChange}
+        />
+        <span className="text-[10px] text-gdc-textMuted/60 tabular-nums shrink-0">
+          {sessionCount === totalCount
+            ? `${totalCount} sessions`
+            : `${sessionCount} / ${totalCount}`}
+        </span>
+      </div>
+
+      {/* Search + filter controls */}
+      <div className="flex gap-1.5">
         <div className="relative flex-1">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gdc-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gdc-textMuted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" strokeWidth="2" />
             <path d="m21 21-4.35-4.35" strokeWidth="2" />
           </svg>
@@ -62,130 +108,120 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
             type="text"
             value={filters.search}
             onChange={e => onUpdate({ ...filters, search: e.target.value })}
-            placeholder="Search sessions, speakers, tags..."
-            className="input pl-9"
+            placeholder="Search sessions, speakers..."
+            className="input pl-8 py-1.5 text-xs"
           />
+          {filters.search && (
+            <button
+              onClick={() => onUpdate({ ...filters, search: '' })}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gdc-textMuted/50 hover:text-gdc-text"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className={`btn-ghost flex items-center gap-1 ${showAdvanced ? 'text-gdc-accent' : ''}`}
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 border ${
+            showAdvanced
+              ? 'bg-gdc-accent/10 text-gdc-accent border-gdc-accent/30'
+              : 'text-gdc-textMuted border-gdc-border/40 hover:text-gdc-text hover:border-gdc-border/60'
+          }`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeWidth="2" d="M3 4h18M3 12h12M3 20h6" />
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
           </svg>
-          <span className="hidden sm:inline">Filters</span>
+          {activeFilterCount > 0 && (
+            <span className="min-w-[14px] h-3.5 bg-gdc-accent/20 text-gdc-accent text-[9px] rounded-full flex items-center justify-center font-medium">
+              {activeFilterCount}
+            </span>
+          )}
         </button>
-        {hasActiveFilters && (
-          <button onClick={clearAll} className="btn-ghost text-gdc-danger">
-            Clear
-          </button>
-        )}
       </div>
 
-      {/* Result count */}
-      <div className="flex items-center justify-between text-xs text-gdc-textMuted">
-        <span>
-          {sessionCount === totalCount
-            ? `${totalCount} sessions`
-            : `${sessionCount} of ${totalCount} sessions`}
-        </span>
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-1 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={filters.scheduledOnly}
-              onChange={e => onUpdate({ ...filters, scheduledOnly: e.target.checked })}
-              className="rounded border-gdc-border bg-gdc-surface text-gdc-accent focus:ring-gdc-accent"
-            />
-            <span>Starred only</span>
-          </label>
-        </div>
+      {/* Quick toggles row */}
+      <div className="flex items-center gap-3">
+        <Toggle
+          checked={filters.scheduledOnly}
+          onChange={checked => onUpdate({ ...filters, scheduledOnly: checked })}
+          label="Starred only"
+        />
+        {hasActiveFilters && (
+          <button onClick={clearAll} className="text-[10px] text-gdc-danger/70 hover:text-gdc-danger transition-colors ml-auto">
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Advanced filters */}
       {showAdvanced && (
         <div className="card p-3 space-y-3">
           {/* Days */}
-          <div>
-            <label className="text-xs font-medium text-gdc-textMuted mb-1 block">Days</label>
+          <FilterSection label="Days">
             <div className="flex flex-wrap gap-1">
               {ALL_DAYS.map(d => (
                 <button
                   key={d}
                   onClick={() => toggleDay(d)}
-                  className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                    filters.days.includes(d)
-                      ? 'bg-gdc-accent text-white'
-                      : 'bg-gdc-bg text-gdc-textMuted hover:text-gdc-text'
-                  }`}
+                  className={filters.days.includes(d) ? 'pill-active' : 'pill-inactive'}
                 >
                   {DAY_LABELS[d]}
                 </button>
               ))}
             </div>
-          </div>
+          </FilterSection>
 
           {/* Tracks */}
-          <div>
-            <label className="text-xs font-medium text-gdc-textMuted mb-1 block">Tracks</label>
+          <FilterSection label="Tracks">
             <div className="flex flex-wrap gap-1">
               {ALL_TRACKS.map(t => (
                 <button
                   key={t}
                   onClick={() => toggleTrack(t)}
-                  className={`track-badge transition-opacity cursor-pointer ${TRACK_COLORS[t]} ${
-                    filters.tracks.length > 0 && !filters.tracks.includes(t) ? 'opacity-30' : ''
+                  className={`track-badge transition-all duration-150 cursor-pointer ${TRACK_COLORS[t]} ${
+                    filters.tracks.length > 0 && !filters.tracks.includes(t) ? 'opacity-25 scale-95' : ''
                   }`}
                 >
                   {t}
                 </button>
               ))}
             </div>
-          </div>
+          </FilterSection>
 
           {/* Formats */}
-          <div>
-            <label className="text-xs font-medium text-gdc-textMuted mb-1 block">Format</label>
+          <FilterSection label="Format">
             <div className="flex flex-wrap gap-1">
               {ALL_FORMATS.map(f => (
                 <button
                   key={f}
                   onClick={() => toggleFormat(f)}
-                  className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                    filters.formats.includes(f)
-                      ? 'bg-gdc-accent text-white'
-                      : 'bg-gdc-bg text-gdc-textMuted hover:text-gdc-text'
-                  }`}
+                  className={filters.formats.includes(f) ? 'pill-active' : 'pill-inactive'}
                 >
                   {f}
                 </button>
               ))}
             </div>
-          </div>
+          </FilterSection>
 
           {/* Interest filter */}
-          <div>
-            <label className="text-xs font-medium text-gdc-textMuted mb-1 block">Minimum Interest</label>
+          <FilterSection label="Minimum Interest">
             <div className="flex gap-1">
               {([0, 1, 2, 3] as const).map(n => (
                 <button
                   key={n}
                   onClick={() => onUpdate({ ...filters, interestMin: n as InterestLevel })}
-                  className={`text-xs px-2 py-1 rounded-md transition-colors ${
-                    filters.interestMin === n
-                      ? 'bg-gdc-accent text-white'
-                      : 'bg-gdc-bg text-gdc-textMuted hover:text-gdc-text'
-                  }`}
+                  className={filters.interestMin === n ? 'pill-active' : 'pill-inactive'}
                 >
                   {n === 0 ? 'All' : n === 1 ? 'Maybe+' : n === 2 ? 'Want+' : 'Must'}
                 </button>
               ))}
             </div>
-          </div>
+          </FilterSection>
 
           {/* Time range */}
-          <div>
-            <label className="text-xs font-medium text-gdc-textMuted mb-1 block">Time Range</label>
+          <FilterSection label="Time Range">
             <div className="flex items-center gap-2">
               <input
                 type="time"
@@ -194,9 +230,9 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
                   ...filters,
                   timeRange: { start: e.target.value, end: filters.timeRange?.end ?? '18:00' }
                 })}
-                className="input w-auto text-xs"
+                className="input w-auto text-[11px] py-1 px-2"
               />
-              <span className="text-gdc-textMuted text-xs">to</span>
+              <span className="text-gdc-textMuted/50 text-[10px]">to</span>
               <input
                 type="time"
                 value={filters.timeRange?.end ?? '18:00'}
@@ -204,23 +240,34 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
                   ...filters,
                   timeRange: { start: filters.timeRange?.start ?? '09:00', end: e.target.value }
                 })}
-                className="input w-auto text-xs"
+                className="input w-auto text-[11px] py-1 px-2"
               />
               {filters.timeRange && (
                 <button
                   onClick={() => onUpdate({ ...filters, timeRange: null })}
-                  className="text-xs text-gdc-danger hover:underline"
+                  className="text-[10px] text-gdc-danger/70 hover:text-gdc-danger transition-colors"
                 >
                   Clear
                 </button>
               )}
             </div>
-          </div>
+          </FilterSection>
         </div>
       )}
     </div>
   )
 }
+
+function FilterSection({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="text-[10px] font-medium text-gdc-textMuted/60 uppercase tracking-wider mb-1.5 block">{label}</label>
+      {children}
+    </div>
+  )
+}
+
+// --- Browse mode tabs ---
 
 type BrowseTab = BrowseMode | 'swipe'
 
@@ -229,8 +276,8 @@ const BROWSE_TAB_CONFIG: { key: BrowseTab; label: string; icon: React.ReactNode 
     key: 'timeline',
     label: 'Timeline',
     icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeWidth="2" d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+        <path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
       </svg>
     ),
   },
@@ -238,8 +285,8 @@ const BROWSE_TAB_CONFIG: { key: BrowseTab; label: string; icon: React.ReactNode 
     key: 'tracks',
     label: 'Tracks',
     icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeWidth="2" d="M4 6h16M4 12h10M4 18h6" />
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+        <path d="M7 7h10M7 12h6M7 17h8" />
       </svg>
     ),
   },
@@ -247,18 +294,19 @@ const BROWSE_TAB_CONFIG: { key: BrowseTab; label: string; icon: React.ReactNode 
     key: 'compact',
     label: 'Compact',
     icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeWidth="2" d="M3 5h18M3 10h18M3 15h18M3 20h18" />
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+        <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
       </svg>
     ),
   },
   {
     key: 'swipe',
-    label: 'Swipe',
+    label: 'Rate',
     icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 5h6" />
-        <path strokeWidth="2" strokeLinecap="round" d="M9 12l2 2 4-4" />
+      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 9V5a3 3 0 00-6 0v4" />
+        <path d="M5 11h14a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2z" />
+        <path d="M12 15h.01" />
       </svg>
     ),
   },
@@ -277,7 +325,7 @@ export function BrowseModeControl({
 }) {
   const activeKey: BrowseTab = swipeActive ? 'swipe' : value
   return (
-    <div className="flex items-center rounded-lg bg-gdc-bg/60 border border-gdc-border/30 p-0.5">
+    <div className="inline-flex items-center rounded-lg bg-gdc-surface/50 border border-gdc-border/30 p-0.5 gap-0.5">
       {BROWSE_TAB_CONFIG.map(({ key, label, icon }) => {
         const isActive = activeKey === key
         return (
@@ -291,10 +339,10 @@ export function BrowseModeControl({
                 onChange(key)
               }
             }}
-            className={`text-[11px] px-2 py-1 rounded-md flex items-center gap-1 transition-all ${
+            className={`text-[11px] px-2 py-1 rounded-md flex items-center gap-1 transition-all duration-150 ${
               isActive
-                ? 'bg-gdc-accent/15 text-gdc-accent font-medium shadow-sm'
-                : 'text-gdc-textMuted hover:text-gdc-text'
+                ? 'bg-gdc-accent/12 text-gdc-accent font-medium'
+                : 'text-gdc-textMuted/70 hover:text-gdc-text'
             }`}
             title={label}
           >
