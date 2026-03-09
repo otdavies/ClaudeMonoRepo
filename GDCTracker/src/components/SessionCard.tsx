@@ -1,5 +1,5 @@
-import { memo, useCallback, useState } from 'react'
-import { Session, UserSessionData, TRACK_COLORS, InterestLevel } from '../types'
+import { memo, useCallback, useState, useRef } from 'react'
+import { Session, UserSessionData, TRACK_COLORS, InterestLevel, DAY_LABELS } from '../types'
 import { formatTimeRange, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
 import { generateGoogleCalendarURL } from '../utils/calendar'
@@ -35,12 +35,25 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
     : ''
 
   const [showMap, setShowMap] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const copiedTimeout = useRef<ReturnType<typeof setTimeout>>()
   const handleClick = useCallback(() => onToggleExpand(session.id), [onToggleExpand, session.id])
 
   const handleInterestChange = useCallback(
     (v: InterestLevel) => onUpdateUserData(session.id, { interest: v }),
     [onUpdateUserData, session.id]
   )
+
+  const handleCopyTalk = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    const dayLabel = DAY_LABELS[session.day]?.split(' ')[0] || session.day
+    const text = `${session.title} (${dayLabel} ${formatTimeRange(session.startTime, session.endTime)})`
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      clearTimeout(copiedTimeout.current)
+      copiedTimeout.current = setTimeout(() => setCopied(false), 2000)
+    })
+  }, [session])
 
   return (
     <div
@@ -143,6 +156,22 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
                 <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l5.447 2.724A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
               </svg>
               Map
+            </button>
+            <button
+              onClick={handleCopyTalk}
+              className="btn-ghost inline-flex items-center gap-1"
+            >
+              {copied ? (
+                <svg className="w-3.5 h-3.5 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                </svg>
+              )}
+              {copied ? 'Copied!' : 'Copy Talk'}
             </button>
           </div>
 
