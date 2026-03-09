@@ -1,10 +1,53 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
 import { formatTime, formatTimeRange, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
 import { AttendeesBadge, AttendeeStrip } from './AttendeesBadge'
 import { AttendeeInfo } from '../hooks/useAttendance'
 import { getWalkWarnings, getZoneLabel, getWalkTimeBetweenRooms, type WalkWarning } from '../utils/location'
+
+// GDC 2026 dates: Mon 3/9 - Fri 3/13
+const DAY_DATES: Record<Day, string> = {
+  Mon: '2026-03-09', Tue: '2026-03-10', Wed: '2026-03-11',
+  Thu: '2026-03-12', Fri: '2026-03-13', TBD: '',
+}
+
+type SlotTiming = 'past' | 'now' | 'upcoming' | 'future'
+
+function getSlotTiming(
+  slot: { day: Day; startTime: string; endTime: string },
+  now: Date,
+  upcomingCount: { n: number },
+  maxUpcoming: number,
+): SlotTiming {
+  const dateStr = DAY_DATES[slot.day]
+  if (!dateStr) return 'future'
+
+  const slotStart = new Date(`${dateStr}T${slot.startTime}:00`)
+  const slotEnd = new Date(`${dateStr}T${slot.endTime}:00`)
+
+  if (now >= slotStart && now < slotEnd) return 'now'
+  if (now >= slotEnd) return 'past'
+  if (upcomingCount.n < maxUpcoming) { upcomingCount.n++; return 'upcoming' }
+  return 'future'
+}
+
+function useNow(intervalMs = 60_000) {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), intervalMs)
+    return () => clearInterval(id)
+  }, [intervalMs])
+  return now
+}
+
+function getCurrentDayLabel(now: Date): string {
+  const iso = now.toISOString().slice(0, 10)
+  for (const [day, date] of Object.entries(DAY_DATES)) {
+    if (date === iso) return DAY_LABELS[day as Day]
+  }
+  return ''
+}
 
 interface Props {
   sessions: Session[]
@@ -130,19 +173,50 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
 
   const pickedCount = starredSessions.filter(s => userData[s.id]?.picked).length
 
+  const now = useNow()
+  const nowRef = useRef<HTMLDivElement>(null)
+  const hasScrolled = useRef(false)
+
+  // Auto-scroll to the "now" marker once
+  useEffect(() => {
+    if (nowRef.current && !hasScrolled.current) {
+      hasScrolled.current = true
+      setTimeout(() => nowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+    }
+  }, [timeSlots.length])
+
+  // Precompute timing for each slot
+  const upcomingCounter = { n: 0 }
+  const slotTimings: SlotTiming[] = timeSlots.map(slot =>
+    getSlotTiming(slot, now, upcomingCounter, 3)
+  )
+
+  const todayLabel = getCurrentDayLabel(now)
+  const nowTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+
   let currentDay: Day | null = null
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-gdc-textMuted">
-        {pickedCount > 0
-          ? `${pickedCount} session${pickedCount !== 1 ? 's' : ''} picked to attend. Tap "Attend" to commit to a session.`
-          : 'Tap "Attend" on sessions you plan to go to. Stars show interest, picks show commitment.'
-        }
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-gdc-textMuted">
+          {pickedCount > 0
+            ? `${pickedCount} session${pickedCount !== 1 ? 's' : ''} picked to attend. Tap "Attend" to commit.`
+            : 'Tap "Attend" on sessions you plan to go to.'
+          }
+        </p>
+        {todayLabel && (
+          <span className="text-[10px] font-mono text-gdc-accent/80 bg-gdc-accent/10 px-2 py-0.5 rounded-full">
+            {nowTimeStr}
+          </span>
+        )}
+      </div>
 
       {timeSlots.map((slot, i) => {
         const showDayHeader = slot.day !== currentDay
+        const timing = slotTimings[i]
+        // Check if this is the first slot of today's "now"/"upcoming" — show the NOW divider before the day header
+        const isNow = timing === 'now'
         currentDay = slot.day
         const isChoice = slot.sessions.length > 1
         const duration = getDurationMinutes(slot.startTime, slot.endTime)
@@ -169,29 +243,68 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
           return getWalkTimeBetweenRooms(prevBestRoom, a.room) - getWalkTimeBetweenRooms(prevBestRoom, b.room)
         })
 
+        const isToday = DAY_DATES[slot.day] === now.toISOString().slice(0, 10)
+        const isPast = timing === 'past'
+        const isUpcoming = timing === 'upcoming'
+
         return (
           <div key={`${slot.day}-${slot.startTime}-${i}`}>
             {showDayHeader && (
-              <h2 className="text-sm font-semibold text-gdc-accent mt-4 mb-2 first:mt-0">
-                {DAY_LABELS[slot.day]}
-              </h2>
+              <div className={`flex items-center gap-2 mt-5 mb-2 first:mt-0 ${isPast && !isToday ? 'opacity-40' : ''}`}>
+                <h2 className={`text-sm font-bold tracking-tight ${
+                  isToday ? 'text-gdc-accent' : 'text-gdc-text'
+                }`}>
+                  {DAY_LABELS[slot.day]}
+                </h2>
+                {isToday && (
+                  <span className="text-[10px] font-semibold bg-gdc-accent text-white px-1.5 py-0.5 rounded">
+                    TODAY
+                  </span>
+                )}
+                <div className="flex-1 h-px bg-gdc-border/40" />
+              </div>
+            )}
+
+            {/* NOW divider — shown before the current slot */}
+            {isNow && (
+              <div ref={nowRef} className="flex items-center gap-2 my-2">
+                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider">Now</span>
+                <div className="flex-1 h-px bg-green-400/30" />
+              </div>
             )}
 
             {slotWarning && <WalkWarningDivider warning={slotWarning} />}
 
-            <div className={`card p-0 overflow-hidden ${
+            <div className={`card p-0 overflow-hidden transition-opacity ${
+              isPast ? 'opacity-40' : ''
+            } ${
+              isNow ? 'ring-1 ring-green-400/40' :
+              isUpcoming ? 'ring-1 ring-gdc-accent/20' :
               isChoice && !hasPick ? 'ring-1 ring-amber-500/30' :
               isChoice && hasPick ? 'ring-1 ring-gdc-accent/30' : ''
             }`}>
               {/* Slot header */}
-              <div className="flex items-center justify-between px-3 py-1.5 bg-gdc-bg/50 border-b border-gdc-border/30">
+              <div className={`flex items-center justify-between px-3 py-1.5 border-b border-gdc-border/30 ${
+                isNow ? 'bg-green-500/10' : isUpcoming ? 'bg-gdc-accent/5' : 'bg-gdc-bg/50'
+              }`}>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-medium">
+                  <span className={`text-xs font-mono font-medium ${isNow ? 'text-green-400' : ''}`}>
                     {formatTime(slot.startTime)}
                   </span>
                   <span className="text-[10px] text-gdc-textMuted">
                     {duration}min {'\u2192'} {formatTime(slot.endTime)}
                   </span>
+                  {isNow && (
+                    <span className="text-[9px] font-bold text-green-400 bg-green-400/15 px-1.5 py-0.5 rounded-full uppercase">
+                      Live
+                    </span>
+                  )}
+                  {isUpcoming && (
+                    <span className="text-[9px] font-medium text-gdc-accent/70 bg-gdc-accent/10 px-1.5 py-0.5 rounded-full">
+                      Up next
+                    </span>
+                  )}
                 </div>
                 {isChoice && (
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
