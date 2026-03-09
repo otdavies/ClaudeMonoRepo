@@ -82,6 +82,11 @@ export function getWalkWarnings(starredSessions: Session[]): WalkWarning[] {
   return warnings
 }
 
+/** Get walk time in minutes between two rooms. 0 = same building. */
+export function getWalkTimeBetweenRooms(roomA: string, roomB: string): number {
+  return getWalkTime(getZone(roomA), getZone(roomB))
+}
+
 /** Get a short zone label for display */
 export function getZoneLabel(room: string): string {
   const zone = getZone(room)

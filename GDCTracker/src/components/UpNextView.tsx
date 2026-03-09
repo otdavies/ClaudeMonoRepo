@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
 import { formatTime, formatTimeRange, timeToMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
-import { getWalkWarnings, getZoneLabel, type WalkWarning } from '../utils/location'
+import { getWalkWarnings, getZoneLabel, getWalkTimeBetweenRooms, type WalkWarning } from '../utils/location'
 
 interface Props {
   sessions: Session[]
@@ -142,6 +142,22 @@ export function UpNextView({ sessions, userData, onUpdateUserData }: Props) {
           .map(s => warningsByTo.get(s.id))
           .find(w => w !== undefined)
 
+        // Previous slot's best session (highest interest) — used for distance ranking
+        const prevSlot = i > 0 && timeSlots[i - 1].day === slot.day ? timeSlots[i - 1] : null
+        const prevBestRoom = prevSlot
+          ? [...prevSlot.sessions].sort((a, b) => (userData[b.id]?.interest ?? 0) - (userData[a.id]?.interest ?? 0))[0]?.room
+          : null
+
+        // Sort: stars desc, then distance from previous slot asc (closer = better)
+        const sortedSessions = [...slot.sessions].sort((a, b) => {
+          const starDiff = (userData[b.id]?.interest ?? 0) - (userData[a.id]?.interest ?? 0)
+          if (starDiff !== 0) return starDiff
+          if (!prevBestRoom) return 0
+          const distA = getWalkTimeBetweenRooms(prevBestRoom, a.room)
+          const distB = getWalkTimeBetweenRooms(prevBestRoom, b.room)
+          return distA - distB
+        })
+
         return (
           <div key={`${slot.day}-${slot.startTime}-${i}`}>
             {showDayHeader && (
@@ -168,24 +184,39 @@ export function UpNextView({ sessions, userData, onUpdateUserData }: Props) {
 
               {/* Sessions in this slot */}
               <div className={`space-y-2 ${isConflict ? 'divide-y divide-gdc-border' : ''}`}>
-                {slot.sessions
-                  .sort((a, b) => (userData[b.id]?.interest ?? 0) - (userData[a.id]?.interest ?? 0))
-                  .map((session, j) => {
+                {sortedSessions.map((session, j) => {
                     const interest = userData[session.id]?.interest ?? 0
                     const trackColor = TRACK_COLORS[session.track]
                     const zone = getZoneLabel(session.room)
+                    const walkFromPrev = prevBestRoom ? getWalkTimeBetweenRooms(prevBestRoom, session.room) : 0
 
                     return (
                       <div key={session.id} className={j > 0 ? 'pt-2' : ''}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 mb-0.5">
+                            <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                               <span className={`track-badge ${trackColor}`}>
                                 {session.track}
                               </span>
                               <span className="text-[10px] text-gdc-textMuted font-mono">
                                 {formatTimeRange(session.startTime, session.endTime)}
                               </span>
+                              {/* Proximity badge */}
+                              {isConflict && prevBestRoom && (
+                                walkFromPrev === 0 ? (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">
+                                    Same building
+                                  </span>
+                                ) : (
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${
+                                    walkFromPrev >= 10
+                                      ? 'bg-red-500/15 text-red-400'
+                                      : 'bg-amber-500/15 text-amber-400'
+                                  }`}>
+                                    ~{walkFromPrev}min walk
+                                  </span>
+                                )
+                              )}
                             </div>
                             <h3 className="text-sm font-semibold leading-snug">{session.title}</h3>
                             <p className="text-xs text-gdc-textMuted mt-0.5">
