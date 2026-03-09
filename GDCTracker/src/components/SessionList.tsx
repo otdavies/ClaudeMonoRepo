@@ -79,15 +79,14 @@ function TimelineView({ sessions, userData, onUpdateUserData, conflictMap }: Omi
   }, [sessions])
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1">
       {structure.map(({ day, slots }) => (
         <CollapsibleGroup
           key={day}
           label={DAY_LABELS[day]}
           count={slots.reduce((n, s) => n + s.sessions.length, 0)}
-          defaultOpen
         >
-          <div className="space-y-1 ml-2 border-l border-gdc-border/30 pl-3">
+          <div className="space-y-0.5 ml-0 sm:ml-2 border-l border-gdc-border/20 pl-2 sm:pl-3">
             {slots.map(({ time, sessions: slotSessions }) => {
               const hasOverlap = slotSessions.length > 1
               return (
@@ -100,9 +99,8 @@ function TimelineView({ sessions, userData, onUpdateUserData, conflictMap }: Omi
                       {slotSessions.length} options
                     </span>
                   ) : undefined}
-                  defaultOpen={slotSessions.length <= 4}
                 >
-                  <div className="space-y-2 ml-1">
+                  <div className="space-y-1.5 ml-0 sm:ml-1">
                     {slotSessions.map(s => (
                       <SessionCard
                         key={s.id}
