@@ -271,45 +271,11 @@ function FilterSection({ label, children }: { label: string; children: React.Rea
 
 type BrowseTab = BrowseMode | 'swipe'
 
-const BROWSE_TAB_CONFIG: { key: BrowseTab; label: string; icon: React.ReactNode }[] = [
-  {
-    key: 'timeline',
-    label: 'Timeline',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-        <path d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
-      </svg>
-    ),
-  },
-  {
-    key: 'tracks',
-    label: 'Tracks',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-        <path d="M7 7h10M7 12h6M7 17h8" />
-      </svg>
-    ),
-  },
-  {
-    key: 'compact',
-    label: 'Compact',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-        <path d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-      </svg>
-    ),
-  },
-  {
-    key: 'swipe',
-    label: 'Rate',
-    icon: (
-      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 9V5a3 3 0 00-6 0v4" />
-        <path d="M5 11h14a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2z" />
-        <path d="M12 15h.01" />
-      </svg>
-    ),
-  },
+const BROWSE_TABS: { key: BrowseTab; label: string; accent?: boolean }[] = [
+  { key: 'timeline', label: 'Timeline' },
+  { key: 'tracks', label: 'Tracks' },
+  { key: 'compact', label: 'Compact' },
+  { key: 'swipe', label: 'Rate All', accent: true },
 ]
 
 export function BrowseModeControl({
@@ -326,7 +292,7 @@ export function BrowseModeControl({
   const activeKey: BrowseTab = swipeActive ? 'swipe' : value
   return (
     <div className="inline-flex items-center rounded-lg bg-gdc-surface/50 border border-gdc-border/30 p-0.5 gap-0.5">
-      {BROWSE_TAB_CONFIG.map(({ key, label, icon }) => {
+      {BROWSE_TABS.map(({ key, label, accent }) => {
         const isActive = activeKey === key
         return (
           <button
@@ -339,15 +305,17 @@ export function BrowseModeControl({
                 onChange(key)
               }
             }}
-            className={`text-[11px] px-2 py-1 rounded-md flex items-center gap-1 transition-all duration-150 ${
+            className={`text-[11px] px-2.5 py-1 rounded-md transition-all duration-150 font-medium ${
               isActive
-                ? 'bg-gdc-accent/12 text-gdc-accent font-medium'
-                : 'text-gdc-textMuted/70 hover:text-gdc-text'
+                ? accent
+                  ? 'bg-gdc-gold/15 text-gdc-gold'
+                  : 'bg-gdc-accent/12 text-gdc-accent'
+                : accent
+                  ? 'text-gdc-gold/50 hover:text-gdc-gold/80'
+                  : 'text-gdc-textMuted/70 hover:text-gdc-text'
             }`}
-            title={label}
           >
-            {icon}
-            <span className="hidden sm:inline">{label}</span>
+            {label}
           </button>
         )
       })}
