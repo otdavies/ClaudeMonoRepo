@@ -41,6 +41,7 @@ export default function App() {
   const [view, setView] = useState<ViewMode>('browse')
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
   const [browseMode, setBrowseMode] = useState<BrowseMode>('timeline')
+  const [swipeMode, setSwipeMode] = useState(false)
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
 
   // User profile (name + color)
@@ -167,7 +168,6 @@ export default function App() {
           <nav className="flex gap-1">
             {([
               ['browse', 'Browse'],
-              ['swipe', 'Swipe'],
               ['up-next', 'Decide'],
               ['schedule', 'Schedule'],
             ] as const).map(([v, label]) => (
@@ -195,21 +195,56 @@ export default function App() {
       <main className="flex-1 max-w-4xl w-full mx-auto px-3 py-4">
         {view === 'browse' && (
           <div className="space-y-3">
-            <FilterBar
-              filters={filters}
-              onUpdate={setFilters}
-              sessionCount={filteredSessions.length}
-              totalCount={allSessions.length}
-            />
-            <BrowseModeControl value={browseMode} onChange={setBrowseMode} />
-            <SessionList
-              sessions={filteredSessions}
-              userData={userData}
-              onUpdateUserData={updateUserData}
-              conflictMap={conflictMap}
-              browseMode={browseMode}
-              onSelectSession={selectSession}
-            />
+            {swipeMode ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gdc-textMuted">Swipe through unrated sessions</span>
+                  <button
+                    onClick={() => setSwipeMode(false)}
+                    className="tab-inactive text-xs px-2 py-1 flex items-center gap-1"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path d="M4 6h16M4 12h10M4 18h6" />
+                    </svg>
+                    List View
+                  </button>
+                </div>
+                <SwipeView
+                  sessions={allSessions}
+                  userData={userData}
+                  onUpdateUserData={updateUserData}
+                />
+              </>
+            ) : (
+              <>
+                <FilterBar
+                  filters={filters}
+                  onUpdate={setFilters}
+                  sessionCount={filteredSessions.length}
+                  totalCount={allSessions.length}
+                />
+                <div className="flex items-center justify-between">
+                  <BrowseModeControl value={browseMode} onChange={setBrowseMode} />
+                  <button
+                    onClick={() => setSwipeMode(true)}
+                    className="tab-inactive text-xs px-2 py-1 flex items-center gap-1"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                    <span className="hidden sm:inline">Swipe</span>
+                  </button>
+                </div>
+                <SessionList
+                  sessions={filteredSessions}
+                  userData={userData}
+                  onUpdateUserData={updateUserData}
+                  conflictMap={conflictMap}
+                  browseMode={browseMode}
+                  onSelectSession={selectSession}
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -233,14 +268,6 @@ export default function App() {
             onSelectSession={selectSession}
             getAttendees={getAttendees}
             getAllAttendees={getAllAttendees}
-          />
-        )}
-
-        {view === 'swipe' && (
-          <SwipeView
-            sessions={allSessions}
-            userData={userData}
-            onUpdateUserData={updateUserData}
           />
         )}
 

@@ -73,7 +73,7 @@ export interface FilterState {
   timeRange: { start: string; end: string } | null
 }
 
-export type ViewMode = 'browse' | 'schedule' | 'up-next' | 'swipe'
+export type ViewMode = 'browse' | 'schedule' | 'up-next'
 
 export const TRACK_COLORS: Record<Track, string> = {
   'Audio': 'bg-green-500/20 text-green-400 border-green-500',

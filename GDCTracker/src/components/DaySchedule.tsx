@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS } from '../types'
 import { formatTimeRange, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
 import { AttendeesBadge, AttendeeStrip } from './AttendeesBadge'
@@ -16,7 +16,108 @@ interface Props {
   getAllAttendees?: (sessionId: string) => AttendeeInfo[]
 }
 
-export function DaySchedule({ day, sessions, userData, onSelectSession, getAttendees, getAllAttendees }: Props) {
+/**
+ * Find starred-but-unpicked sessions that fit within a gap between two picked sessions.
+ */
+function getGapSessions(
+  allSessions: Session[],
+  userData: Record<string, UserSessionData>,
+  day: Day,
+  gapStart: string,
+  gapEnd: string,
+): Session[] {
+  const gapStartMin = timeToMinutes(gapStart)
+  const gapEndMin = timeToMinutes(gapEnd)
+  return allSessions.filter(s => {
+    if (s.day !== day) return false
+    const interest = userData[s.id]?.interest ?? 0
+    const picked = userData[s.id]?.picked ?? false
+    if (interest === 0 || picked) return false
+    const sStart = timeToMinutes(s.startTime)
+    const sEnd = timeToMinutes(s.endTime)
+    // Session fits within or overlaps the gap
+    return sStart >= gapStartMin && sEnd <= gapEndMin
+  })
+}
+
+function GapIndicator({
+  gap,
+  gapSessions,
+  onPick,
+  onSelectSession,
+}: {
+  gap: number
+  gapSessions: Session[]
+  onPick: (id: string) => void
+  onSelectSession?: (id: string) => void
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const hasOptions = gapSessions.length > 0
+
+  return (
+    <div className="my-1">
+      <div
+        className={`flex items-center gap-2 px-2 py-1 text-[10px] text-gdc-border ${hasOptions ? 'cursor-pointer hover:text-gdc-textMuted' : ''}`}
+        onClick={() => hasOptions && setExpanded(!expanded)}
+      >
+        <div className="flex-1 border-t border-dashed border-current opacity-30" />
+        <span className="flex items-center gap-1">
+          {gap}min free
+          {hasOptions && (
+            <span className="text-gdc-textMuted">
+              ({gapSessions.length} option{gapSessions.length !== 1 ? 's' : ''})
+              <svg
+                className={`w-2.5 h-2.5 inline ml-0.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"
+              >
+                <path d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          )}
+        </span>
+        <div className="flex-1 border-t border-dashed border-current opacity-30" />
+      </div>
+
+      {expanded && (
+        <div className="mx-2 mb-1 rounded-lg border border-gdc-border/20 bg-gdc-surface/30 overflow-hidden divide-y divide-gdc-border/10">
+          {gapSessions.map(s => {
+            const trackColor = TRACK_COLORS[s.track]
+            return (
+              <div
+                key={s.id}
+                className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-gdc-surfaceHover/30 transition-colors"
+              >
+                <button
+                  onClick={(e) => { e.stopPropagation(); onPick(s.id) }}
+                  className="shrink-0 w-4 h-4 rounded-full border border-dashed border-gdc-textMuted/40 hover:border-gdc-accent hover:bg-gdc-accent/10 transition-colors flex items-center justify-center"
+                  title="Add to schedule"
+                >
+                  <svg className="w-2 h-2 text-gdc-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                </button>
+                <div
+                  className="min-w-0 flex-1 cursor-pointer"
+                  onClick={() => onSelectSession?.(s.id)}
+                >
+                  <p className="text-[11px] truncate">{s.title}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className={`track-badge ${trackColor} text-[9px]`}>{s.track}</span>
+                    <span className="text-[9px] text-gdc-textMuted font-mono">
+                      {formatTimeRange(s.startTime, s.endTime)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function DaySchedule({ day, sessions, userData, onUpdateUserData, onSelectSession, getAttendees, getAllAttendees }: Props) {
   // Only show picked sessions in the schedule
   const pickedSessions = useMemo(
     () => sessions
@@ -35,6 +136,10 @@ export function DaySchedule({ day, sessions, userData, onSelectSession, getAtten
     for (const w of walkWarnings) map.set(w.toSession.id, w)
     return map
   }, [walkWarnings])
+
+  const handlePick = (id: string) => {
+    onUpdateUserData(id, { picked: true })
+  }
 
   if (pickedSessions.length === 0) {
     return (
@@ -69,6 +174,11 @@ export function DaySchedule({ day, sessions, userData, onSelectSession, getAtten
           const prev = i > 0 ? pickedSessions[i - 1] : null
           const gap = prev ? timeToMinutes(session.startTime) - timeToMinutes(prev.endTime) : 0
 
+          // Sessions available during the gap
+          const gapSessions = prev && gap > 15
+            ? getGapSessions(sessions, userData, day, prev.endTime, session.startTime)
+            : []
+
           return (
             <div key={session.id}>
               {/* Walk warning between sessions */}
@@ -84,13 +194,14 @@ export function DaySchedule({ day, sessions, userData, onSelectSession, getAtten
                 </div>
               )}
 
-              {/* Gap indicator */}
+              {/* Gap indicator with expandable options */}
               {!warning && i > 0 && gap > 15 && (
-                <div className="flex items-center gap-2 px-2 py-1 mb-1 text-[10px] text-gdc-border">
-                  <div className="flex-1 border-t border-dashed border-current opacity-30" />
-                  <span>{gap}min free</span>
-                  <div className="flex-1 border-t border-dashed border-current opacity-30" />
-                </div>
+                <GapIndicator
+                  gap={gap}
+                  gapSessions={gapSessions}
+                  onPick={handlePick}
+                  onSelectSession={onSelectSession}
+                />
               )}
 
               {/* Session card */}
