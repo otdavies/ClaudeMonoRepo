@@ -13,7 +13,7 @@ interface Props {
   onToggleExpand: (id: string) => void
 }
 
-const DEFAULT_USER_DATA: UserSessionData = { interest: 0, scheduled: false, notes: '' }
+const DEFAULT_USER_DATA: UserSessionData = { interest: 0, scheduled: false, picked: false, notes: '' }
 
 export const SessionCard = memo(function SessionCard({ session, userData, onUpdateUserData, conflicts, expanded, onToggleExpand }: Props) {
   const duration = getDurationMinutes(session.startTime, session.endTime)

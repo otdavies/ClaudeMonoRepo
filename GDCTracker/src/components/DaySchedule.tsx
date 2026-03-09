@@ -20,12 +20,14 @@ interface TimeSlot {
   sessions: Session[]
 }
 
-function groupIntoSlots(sessions: Session[]): TimeSlot[] {
-  const sorted = [...sessions].sort((a, b) => a.startTime.localeCompare(b.startTime))
+/**
+ * Group by start time (within 10 min), not overlap chains.
+ */
+function groupByStartTime(sorted: Session[]): TimeSlot[] {
   const slots: TimeSlot[] = []
   for (const s of sorted) {
     const last = slots[slots.length - 1]
-    if (last && timeToMinutes(s.startTime) < timeToMinutes(last.endTime)) {
+    if (last && Math.abs(timeToMinutes(s.startTime) - timeToMinutes(last.startTime)) < 10) {
       last.sessions.push(s)
       if (s.endTime > last.endTime) last.endTime = s.endTime
     } else {
@@ -40,7 +42,10 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
     .filter(s => s.day === day)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
-  const slots = useMemo(() => groupIntoSlots(daySessions), [daySessions])
+  const slots = useMemo(() => groupByStartTime(daySessions), [daySessions])
+
+  // Check if user has picked anything on this day
+  const anyPicked = daySessions.some(s => userData[s.id]?.picked)
 
   const dayWalkWarnings = useMemo(
     () => getWalkWarnings(daySessions, userData),
@@ -66,7 +71,7 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
     <div>
       <h2 className="text-sm font-semibold text-gdc-accent mb-3">{DAY_LABELS[day]}</h2>
 
-      {/* Walk warnings summary */}
+      {/* Walk warnings */}
       {dayWalkWarnings.length > 0 && (
         <div className="space-y-1 mb-3">
           {dayWalkWarnings.map((w, i) => (
@@ -92,13 +97,21 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
       {/* Timeline */}
       <div className="space-y-1">
         {slots.map((slot, i) => {
-          const isConflict = slot.sessions.length > 1
+          const isChoice = slot.sessions.length > 1
           const duration = getDurationMinutes(slot.startTime, slot.endTime)
+          const hasPick = slot.sessions.some(s => userData[s.id]?.picked)
 
-          // Check for walk warning into this slot
           const slotWarning = slot.sessions
             .map(s => warningsByTo.get(s.id))
             .find(w => w !== undefined)
+
+          // Sort: picked first, then stars desc
+          const sortedSessions = [...slot.sessions].sort((a, b) => {
+            const aPicked = userData[a.id]?.picked ? 1 : 0
+            const bPicked = userData[b.id]?.picked ? 1 : 0
+            if (bPicked !== aPicked) return bPicked - aPicked
+            return (userData[b.id]?.interest ?? 0) - (userData[a.id]?.interest ?? 0)
+          })
 
           return (
             <div key={`${slot.startTime}-${i}`}>
@@ -113,7 +126,7 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
                 </div>
               )}
 
-              {/* Gap indicator between non-adjacent slots */}
+              {/* Gap indicator */}
               {!slotWarning && i > 0 && (() => {
                 const prevSlot = slots[i - 1]
                 const gap = timeToMinutes(slot.startTime) - timeToMinutes(prevSlot.endTime)
@@ -129,7 +142,10 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
                 return null
               })()}
 
-              <div className={`card p-0 overflow-hidden ${isConflict ? 'ring-1 ring-amber-500/30' : ''}`}>
+              <div className={`card p-0 overflow-hidden ${
+                isChoice && !hasPick ? 'ring-1 ring-amber-500/30' :
+                isChoice && hasPick ? 'ring-1 ring-gdc-accent/30' : ''
+              }`}>
                 {/* Time header */}
                 <div className="flex items-center justify-between px-3 py-1.5 bg-gdc-bg/50 border-b border-gdc-border/30">
                   <div className="flex items-center gap-2">
@@ -140,47 +156,67 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
                       {duration}min {'\u2192'} {formatTime(slot.endTime)}
                     </span>
                   </div>
-                  {isConflict && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-medium">
-                      {slot.sessions.length} options
+                  {isChoice && (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      hasPick
+                        ? 'bg-gdc-accent/20 text-gdc-accent'
+                        : 'bg-amber-500/20 text-amber-400'
+                    }`}>
+                      {hasPick ? 'Chosen' : `${slot.sessions.length} options`}
                     </span>
                   )}
                 </div>
 
                 {/* Session cards */}
-                <div className={isConflict ? 'divide-y divide-gdc-border/30' : ''}>
-                  {slot.sessions.map(session => {
+                <div className={isChoice ? 'divide-y divide-gdc-border/30' : ''}>
+                  {sortedSessions.map(session => {
                     const interest = userData[session.id]?.interest ?? 0
+                    const picked = userData[session.id]?.picked ?? false
                     const trackColor = TRACK_COLORS[session.track]
                     const hasConflict = (conflictMap.get(session.id) ?? []).length > 0
                     const zone = getZoneLabel(session.room)
+                    // Dim unpicked sessions when picks exist
+                    const dimmed = anyPicked && !picked
 
                     return (
                       <div
                         key={session.id}
-                        className="px-3 py-2 cursor-pointer hover:bg-gdc-surfaceHover/50 active:bg-gdc-surfaceHover transition-colors"
+                        className={`px-3 py-2 cursor-pointer hover:bg-gdc-surfaceHover/50 active:bg-gdc-surfaceHover transition-colors ${
+                          picked ? 'bg-gdc-accent/5' :
+                          dimmed ? 'opacity-40' : ''
+                        }`}
                         onClick={() => onSelectSession?.(session.id)}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-sm font-semibold leading-snug">{session.title}</h3>
-                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                              <span className={`track-badge ${trackColor} text-[10px]`}>
-                                {session.track}
-                              </span>
-                              <span className="text-[10px] text-gdc-textMuted">
-                                {session.room}
-                                <span className="opacity-60 ml-0.5">({zone})</span>
-                              </span>
+                          <div className="flex items-start gap-2 min-w-0 flex-1">
+                            {/* Pick indicator */}
+                            {picked && (
+                              <div className="shrink-0 mt-0.5 w-4 h-4 rounded-full bg-gdc-accent flex items-center justify-center">
+                                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+                                  <path d="M5 13l4 4L19 7" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-sm font-semibold leading-snug">{session.title}</h3>
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                <span className={`track-badge ${trackColor} text-[10px]`}>
+                                  {session.track}
+                                </span>
+                                <span className="text-[10px] text-gdc-textMuted">
+                                  {session.room}
+                                  <span className="opacity-60 ml-0.5">({zone})</span>
+                                </span>
+                              </div>
+                              {session.speakers.length > 0 && (
+                                <p className="text-[11px] text-gdc-textMuted mt-0.5 truncate">
+                                  {session.speakers.join(', ')}
+                                </p>
+                              )}
+                              {hasConflict && (
+                                <p className="text-red-400 text-[10px] mt-0.5 font-medium conflict-pulse">CONFLICT</p>
+                              )}
                             </div>
-                            {session.speakers.length > 0 && (
-                              <p className="text-[11px] text-gdc-textMuted mt-0.5 truncate">
-                                {session.speakers.join(', ')}
-                              </p>
-                            )}
-                            {hasConflict && (
-                              <p className="text-red-400 text-[10px] mt-0.5 font-medium conflict-pulse">CONFLICT</p>
-                            )}
                           </div>
                           <div className="shrink-0" onClick={e => e.stopPropagation()}>
                             <InterestRating

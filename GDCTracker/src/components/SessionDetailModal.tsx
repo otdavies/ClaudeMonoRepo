@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void
 }
 
-const DEFAULT_USER_DATA: UserSessionData = { interest: 0, scheduled: false, notes: '' }
+const DEFAULT_USER_DATA: UserSessionData = { interest: 0, scheduled: false, picked: false, notes: '' }
 
 export function SessionDetailModal({ session, userData, onUpdateUserData, onClose }: Props) {
   const data = userData ?? DEFAULT_USER_DATA

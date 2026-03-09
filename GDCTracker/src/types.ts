@@ -50,6 +50,7 @@ export type InterestLevel = 0 | 1 | 2 | 3
 export interface UserSessionData {
   interest: InterestLevel
   scheduled: boolean
+  picked: boolean
   notes: string
 }
 

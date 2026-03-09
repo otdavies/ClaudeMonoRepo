@@ -50,7 +50,7 @@ export default function App() {
     setUserData(prev => ({
       ...prev,
       [id]: {
-        ...(({ interest: 0 as InterestLevel, scheduled: false, notes: '' })),
+        ...(({ interest: 0 as InterestLevel, scheduled: false, picked: false, notes: '' })),
         ...prev[id],
         ...partial,
       },
@@ -216,7 +216,7 @@ export default function App() {
       {selectedSession && (
         <SessionDetailModal
           session={selectedSession}
-          userData={userData[selectedSession.id] ?? { interest: 0, scheduled: false, notes: '' }}
+          userData={userData[selectedSession.id] ?? { interest: 0, scheduled: false, picked: false, notes: '' }}
           onUpdateUserData={updateUserData}
           onClose={() => setSelectedSession(null)}
         />
