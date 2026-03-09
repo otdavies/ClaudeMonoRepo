@@ -19,6 +19,7 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
   const duration = getDurationMinutes(session.startTime, session.endTime)
   const hasConflicts = conflicts.length > 0
   const trackColor = TRACK_COLORS[session.track]
+  const isScheduled = userData.interest > 0
 
   const handleClick = useCallback(() => onToggleExpand(session.id), [onToggleExpand, session.id])
 
@@ -30,26 +31,35 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
   return (
     <div
       className={`card p-3 transition-shadow duration-150 cursor-pointer ${
-        userData.scheduled ? 'ring-1 ring-gdc-accent/50 bg-gdc-accent/5' : ''
-      } ${hasConflicts && userData.scheduled ? 'ring-1 ring-gdc-danger/50' : ''}`}
+        isScheduled ? 'ring-1 ring-gdc-accent/50 bg-gdc-accent/5' : ''
+      } ${hasConflicts && isScheduled ? 'ring-1 ring-gdc-danger/50' : ''}`}
       onClick={handleClick}
     >
       {/* Top row: time + track + interest */}
       <div className="flex items-start justify-between gap-2 mb-1">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
           <span className="session-time text-gdc-textMuted whitespace-nowrap">
             {formatTimeRange(session.startTime, session.endTime)}
           </span>
           <span className="text-gdc-border text-xs">{duration}m</span>
-          <span className={`track-badge ${trackColor}`}>
+          <span className={`track-badge ${trackColor} hidden sm:inline-flex`}>
             {session.track}
           </span>
         </div>
-        <InterestRating
-          level={userData.interest}
-          onChange={handleInterestChange}
-          compact
-        />
+        <div className="shrink-0">
+          <InterestRating
+            level={userData.interest}
+            onChange={handleInterestChange}
+            compact
+          />
+        </div>
+      </div>
+
+      {/* Track badge on mobile (own row) */}
+      <div className="sm:hidden mb-1">
+        <span className={`track-badge ${trackColor}`}>
+          {session.track}
+        </span>
       </div>
 
       {/* Title */}
@@ -65,7 +75,7 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
       </div>
 
       {/* Conflict warning */}
-      {hasConflicts && userData.scheduled && (
+      {hasConflicts && isScheduled && (
         <div className="flex items-center gap-1 text-xs text-gdc-danger conflict-pulse mb-1">
           <span>!!</span>
           <span>Conflicts with {conflicts.length} session{conflicts.length > 1 ? 's' : ''}</span>
@@ -73,14 +83,14 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
       )}
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-1 mb-1">
-        {session.tags.slice(0, expanded ? undefined : 4).map(tag => (
+      <div className="flex flex-wrap gap-1">
+        {session.tags.slice(0, expanded ? undefined : 3).map(tag => (
           <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-gdc-bg text-gdc-textMuted">
             {tag}
           </span>
         ))}
-        {!expanded && session.tags.length > 4 && (
-          <span className="text-[10px] text-gdc-textMuted">+{session.tags.length - 4}</span>
+        {!expanded && session.tags.length > 3 && (
+          <span className="text-[10px] text-gdc-textMuted">+{session.tags.length - 3}</span>
         )}
       </div>
 
@@ -89,33 +99,21 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
         <div className="mt-2 pt-2 border-t border-gdc-border space-y-2">
           <p className="text-xs text-gdc-textMuted leading-relaxed">{session.description}</p>
 
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={e => {
-                e.stopPropagation()
-                onUpdateUserData(session.id, { scheduled: !userData.scheduled })
-              }}
-              className={userData.scheduled ? 'btn-danger' : 'btn-primary'}
-            >
-              {userData.scheduled ? 'Remove from Schedule' : 'Add to Schedule'}
-            </button>
-
-            <a
-              href={generateGoogleCalendarURL(session)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="btn-ghost inline-flex items-center gap-1"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-              Google Cal
-            </a>
-          </div>
+          <a
+            href={generateGoogleCalendarURL(session)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="btn-ghost inline-flex items-center gap-1"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" />
+              <line x1="16" y1="2" x2="16" y2="6" />
+              <line x1="8" y1="2" x2="8" y2="6" />
+              <line x1="3" y1="10" x2="21" y2="10" />
+            </svg>
+            Google Cal
+          </a>
 
           {/* Notes */}
           <div>

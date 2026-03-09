@@ -19,7 +19,7 @@ export const InterestRating = memo(function InterestRating({ level, onChange, co
             e.stopPropagation()
             onChange(level === n ? 0 : n)
           }}
-          className={`star-btn ${compact ? 'text-sm' : 'text-base'} ${
+          className={`star-btn ${compact ? 'text-base p-1' : 'text-lg p-1'} ${
             n <= level
               ? n === 3 ? 'text-red-400' : n === 2 ? 'text-gdc-gold' : 'text-gdc-textMuted'
               : 'text-gdc-border hover:text-gdc-textMuted'

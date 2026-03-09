@@ -15,8 +15,9 @@ export function ClaudeAssistant({ sessions, userData }: Props) {
   const [customPrompt, setCustomPrompt] = useState('')
   const [copied, setCopied] = useState(false)
 
-  const scheduledSessions = sessions.filter(s => userData[s.id]?.scheduled)
-  const interestedSessions = sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0)
+  // interest > 0 = scheduled
+  const scheduledSessions = sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0)
+  const interestedSessions = scheduledSessions
 
   const generateContext = (): string => {
     let context = `# GDC 2026 Schedule Assistant\n\nI'm planning my GDC 2026 week (March 9-13, San Francisco). Help me optimize my schedule.\n\n`
@@ -39,7 +40,7 @@ export function ClaudeAssistant({ sessions, userData }: Props) {
       }
 
       if (interestedSessions.length > 0) {
-        const unscheduledInterested = interestedSessions.filter(s => !userData[s.id]?.scheduled)
+        const unscheduledInterested: Session[] = []
         if (unscheduledInterested.length > 0) {
           context += `## Sessions I'm Interested In But Haven't Scheduled (${unscheduledInterested.length})\n\n`
           for (const s of unscheduledInterested) {
@@ -71,7 +72,7 @@ export function ClaudeAssistant({ sessions, userData }: Props) {
       }
 
       const dayAvailable = sessions
-        .filter(s => s.day === selectedDay && !userData[s.id]?.scheduled)
+        .filter(s => s.day === selectedDay && (userData[s.id]?.interest ?? 0) === 0)
         .sort((a, b) => a.startTime.localeCompare(b.startTime))
 
       context += `### Available Sessions (${dayAvailable.length})\n`

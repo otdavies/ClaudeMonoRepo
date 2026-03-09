@@ -7,7 +7,9 @@ import { useLocalStorage } from './hooks/useLocalStorage'
 import { FilterBar, SortControl } from './components/FilterBar'
 import { SessionList } from './components/SessionList'
 import { ScheduleView } from './components/ScheduleView'
+import { UpNextView } from './components/UpNextView'
 import { ClaudeAssistant } from './components/ClaudeAssistant'
+import { useNotifications } from './hooks/useNotifications'
 
 const DEFAULT_FILTERS: FilterState = {
   search: '',
@@ -36,6 +38,9 @@ export default function App() {
   const [sortBy, setSortBy] = useState<'time' | 'track' | 'interest'>('time')
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
 
+  // Session reminders via notifications
+  const { requestPermission } = useNotifications(allSessions, userData)
+
   // Debounce the search string to avoid re-filtering on every keystroke
   const debouncedSearch = useDebouncedValue(filters.search, 150)
 
@@ -50,9 +55,9 @@ export default function App() {
     }))
   }, [setUserData])
 
-  // Compute scheduled sessions for conflict detection
+  // interest > 0 means scheduled
   const scheduledSessions = useMemo(
-    () => allSessions.filter(s => userData[s.id]?.scheduled),
+    () => allSessions.filter(s => (userData[s.id]?.interest ?? 0) > 0),
     [userData]
   )
 
@@ -82,16 +87,13 @@ export default function App() {
     }
 
     if (filters.scheduledOnly) {
-      result = result.filter(s => userData[s.id]?.scheduled)
+      result = result.filter(s => (userData[s.id]?.interest ?? 0) > 0)
     }
 
     return sortSessions(result, sortBy, userData)
   }, [baseFilteredSessions, filters.interestMin, filters.scheduledOnly, sortBy, userData])
 
-  const scheduledCount = useMemo(
-    () => Object.values(userData).filter(d => d.scheduled).length,
-    [userData]
-  )
+  const scheduledCount = scheduledSessions.length
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -103,11 +105,22 @@ export default function App() {
               <h1 className="text-base font-bold">GDC 2026</h1>
               <span className="text-xs text-gdc-textMuted hidden sm:inline">March 9-13 | San Francisco</span>
             </div>
-            {scheduledCount > 0 && (
-              <span className="text-xs bg-gdc-accent/20 text-gdc-accent px-2 py-0.5 rounded-full">
-                {scheduledCount} scheduled
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {'Notification' in window && Notification.permission !== 'granted' && (
+                <button
+                  onClick={requestPermission}
+                  className="text-[10px] text-gdc-textMuted hover:text-gdc-accent"
+                  title="Enable session reminders"
+                >
+                  🔔 Notify
+                </button>
+              )}
+              {scheduledCount > 0 && (
+                <span className="text-xs bg-gdc-accent/20 text-gdc-accent px-2 py-0.5 rounded-full">
+                  {scheduledCount} starred
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Nav tabs */}
@@ -115,7 +128,7 @@ export default function App() {
             {([
               ['browse', 'Browse'],
               ['schedule', 'Schedule'],
-              ['calendar', 'Calendar'],
+              ['up-next', 'Up Next'],
               ['claude', 'Claude'],
             ] as const).map(([v, label]) => (
               <button
@@ -159,12 +172,20 @@ export default function App() {
           </div>
         )}
 
-        {(view === 'schedule' || view === 'calendar') && (
+        {view === 'schedule' && (
           <ScheduleView
             sessions={allSessions}
             userData={userData}
             onUpdateUserData={updateUserData}
             conflictMap={conflictMap}
+          />
+        )}
+
+        {view === 'up-next' && (
+          <UpNextView
+            sessions={allSessions}
+            userData={userData}
+            onUpdateUserData={updateUserData}
           />
         )}
 

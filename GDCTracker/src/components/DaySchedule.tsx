@@ -9,14 +9,13 @@ interface Props {
   userData: Record<string, UserSessionData>
   onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
   conflictMap: Map<string, string[]>
-  onRemoveFromSchedule: (id: string) => void
 }
 
 const HOUR_HEIGHT = 80 // px per hour
 const START_HOUR = 9
 const END_HOUR = 18
 
-export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap, onRemoveFromSchedule }: Props) {
+export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflictMap }: Props) {
   const daySessions = sessions
     .filter(s => s.day === day)
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
@@ -30,7 +29,7 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
     <div>
       <h2 className="text-sm font-semibold text-gdc-accent mb-3">{DAY_LABELS[day]}</h2>
       {daySessions.length === 0 ? (
-        <p className="text-sm text-gdc-textMuted py-4">No sessions scheduled for this day</p>
+        <p className="text-sm text-gdc-textMuted py-4">No sessions starred for this day</p>
       ) : (
         <div className="relative" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}>
           {/* Hour lines */}
@@ -78,22 +77,12 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
                       {formatTime(session.startTime)}-{formatTime(session.endTime)} | {session.room}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="shrink-0">
                     <InterestRating
                       level={userData[session.id]?.interest ?? 0}
                       onChange={v => onUpdateUserData(session.id, { interest: v as InterestLevel })}
                       compact
                     />
-                    <button
-                      onClick={e => {
-                        e.stopPropagation()
-                        onRemoveFromSchedule(session.id)
-                      }}
-                      className="text-gdc-textMuted hover:text-gdc-danger text-sm leading-none"
-                      title="Remove"
-                    >
-                      x
-                    </button>
                   </div>
                 </div>
                 {height > 50 && (

@@ -98,7 +98,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
               onChange={e => onUpdate({ ...filters, scheduledOnly: e.target.checked })}
               className="rounded border-gdc-border bg-gdc-surface text-gdc-accent focus:ring-gdc-accent"
             />
-            <span>Scheduled only</span>
+            <span>Starred only</span>
           </label>
         </div>
       </div>

@@ -15,11 +15,8 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
   const [mode, setMode] = useState<'day' | 'week'>('day')
   const [selectedDay, setSelectedDay] = useState<Day>('Wed')
 
-  const scheduledSessions = sessions.filter(s => userData[s.id]?.scheduled)
-
-  const removeFromSchedule = (id: string) => {
-    onUpdateUserData(id, { scheduled: false })
-  }
+  // interest > 0 = scheduled
+  const scheduledSessions = sessions.filter(s => (userData[s.id]?.interest ?? 0) > 0)
 
   return (
     <div className="space-y-3">
@@ -61,8 +58,8 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
 
       {scheduledSessions.length === 0 ? (
         <div className="text-center py-12 text-gdc-textMuted">
-          <p className="text-lg mb-1">No sessions scheduled yet</p>
-          <p className="text-sm">Browse sessions and add them to your schedule</p>
+          <p className="text-lg mb-1">No sessions starred yet</p>
+          <p className="text-sm">Star sessions in Browse to add them to your schedule</p>
         </div>
       ) : mode === 'day' ? (
         <DaySchedule
@@ -71,7 +68,6 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
           userData={userData}
           onUpdateUserData={onUpdateUserData}
           conflictMap={conflictMap}
-          onRemoveFromSchedule={removeFromSchedule}
         />
       ) : (
         <WeekCalendar
@@ -79,7 +75,6 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
           userData={userData}
           conflictMap={conflictMap}
           onSelectSession={id => {
-            // Find the day and switch to day view
             const session = sessions.find(s => s.id === id)
             if (session) {
               setSelectedDay(session.day)
