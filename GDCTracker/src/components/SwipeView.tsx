@@ -1,7 +1,6 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
 import { formatTimeRange, timeToMinutes } from '../utils/conflicts'
-import { InterestRating } from './InterestRating'
 
 interface Props {
   sessions: Session[]
@@ -273,11 +272,15 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
             <span className="text-xs font-mono text-gdc-textMuted">
               {formatTimeRange(session.startTime, session.endTime)}
             </span>
-            <InterestRating
-              level={interest}
-              onChange={(n) => onUpdateUserData(session.id, { interest: n as InterestLevel })}
-              compact
-            />
+            {interest > 0 && (
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
+                interest === 1 ? 'text-slate-300 border-slate-500/40 bg-slate-500/10' :
+                interest === 2 ? 'text-amber-300 border-amber-500/40 bg-amber-500/10' :
+                'text-rose-300 border-rose-500/40 bg-rose-500/10'
+              }`}>
+                {interest === 1 ? 'Maybe' : interest === 2 ? 'Want' : 'Must'}
+              </span>
+            )}
           </div>
 
           {/* Title */}
@@ -312,22 +315,35 @@ export function SwipeView({ sessions, userData, onUpdateUserData }: Props) {
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => { e.stopPropagation(); goNext() }}
-                className="py-2.5 px-4 rounded-lg bg-gdc-surface border border-gdc-border text-sm text-gdc-textMuted active:bg-gdc-surfaceHover"
+                className="flex-1 py-2.5 rounded-lg bg-gdc-surface border border-gdc-border text-sm text-gdc-textMuted active:bg-gdc-surfaceHover transition-colors"
               >
                 Skip
               </button>
-              <div className="flex-1 flex justify-center" onClick={(e) => e.stopPropagation()}>
-                <InterestRating
-                  level={interest}
-                  onChange={(n) => {
-                    onUpdateUserData(session.id, { interest: n as InterestLevel })
-                    if (n > 0) goNext()
+              {([
+                { level: 1 as InterestLevel, label: 'Maybe', color: 'text-slate-300', border: 'border-slate-500/50', bg: 'bg-slate-500/10', activeBg: 'bg-slate-500/25' },
+                { level: 2 as InterestLevel, label: 'Want', color: 'text-amber-300', border: 'border-amber-500/50', bg: 'bg-amber-500/10', activeBg: 'bg-amber-500/25' },
+                { level: 3 as InterestLevel, label: 'Must', color: 'text-rose-300', border: 'border-rose-500/50', bg: 'bg-rose-500/10', activeBg: 'bg-rose-500/25' },
+              ]).map(({ level: n, label, color, border, bg, activeBg }) => (
+                <button
+                  key={n}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const newLevel = interest === n ? 0 : n
+                    onUpdateUserData(session.id, { interest: newLevel })
+                    if (newLevel > 0) goNext()
                   }}
-                />
-              </div>
+                  className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                    interest === n
+                      ? `${color} ${border} ${activeBg}`
+                      : `${color} ${border} ${bg} hover:${activeBg}`
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
             <p className="text-center text-[10px] text-gdc-textMuted mt-1.5">
-              Swipe right = star &middot; left = skip
+              Swipe right = interested &middot; left = skip
             </p>
           </div>
         </div>
