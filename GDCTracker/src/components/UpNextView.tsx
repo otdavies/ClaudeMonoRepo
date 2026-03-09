@@ -203,13 +203,17 @@ export function UpNextView({ sessions, userData, onUpdateUserData }: Props) {
                               </span>
                               {/* Proximity badge */}
                               {isConflict && prevBestRoom && (
-                                walkFromPrev === 0 ? (
+                                walkFromPrev <= 1 ? (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">
-                                    Same building
+                                    {walkFromPrev === 0 ? 'Same area' : 'Very close'}
+                                  </span>
+                                ) : walkFromPrev <= 3 ? (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/15 text-green-400">
+                                    ~{walkFromPrev}min walk
                                   </span>
                                 ) : (
                                   <span className={`text-[10px] px-1.5 py-0.5 rounded ${
-                                    walkFromPrev >= 10
+                                    walkFromPrev >= 8
                                       ? 'bg-red-500/15 text-red-400'
                                       : 'bg-amber-500/15 text-amber-400'
                                   }`}>
