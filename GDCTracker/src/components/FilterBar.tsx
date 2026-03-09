@@ -97,8 +97,8 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
         </span>
       </div>
 
-      {/* Search + filter controls */}
-      <div className="flex gap-1.5">
+      {/* Search + toggle + filter controls */}
+      <div className="flex items-center gap-1.5">
         <div className="relative flex-1">
           <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gdc-textMuted/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" strokeWidth="2" />
@@ -122,9 +122,14 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
             </button>
           )}
         </div>
+        <Toggle
+          checked={filters.scheduledOnly}
+          onChange={checked => onUpdate({ ...filters, scheduledOnly: checked })}
+          label="Starred"
+        />
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 border ${
+          className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 border shrink-0 ${
             showAdvanced
               ? 'bg-gdc-accent/10 text-gdc-accent border-gdc-accent/30'
               : 'text-gdc-textMuted border-gdc-border/40 hover:text-gdc-text hover:border-gdc-border/60'
@@ -139,18 +144,9 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
             </span>
           )}
         </button>
-      </div>
-
-      {/* Quick toggles row */}
-      <div className="flex items-center gap-3">
-        <Toggle
-          checked={filters.scheduledOnly}
-          onChange={checked => onUpdate({ ...filters, scheduledOnly: checked })}
-          label="Starred only"
-        />
         {hasActiveFilters && (
-          <button onClick={clearAll} className="text-[10px] text-gdc-danger/70 hover:text-gdc-danger transition-colors ml-auto">
-            Clear filters
+          <button onClick={clearAll} className="text-[10px] text-gdc-danger/70 hover:text-gdc-danger transition-colors shrink-0">
+            Clear
           </button>
         )}
       </div>
