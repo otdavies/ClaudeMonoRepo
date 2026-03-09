@@ -301,13 +301,13 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
               isPast ? 'opacity-40' : ''
             } ${
               isNow ? 'ring-1 ring-green-400/40' :
-              isUpcoming ? 'ring-1 ring-gdc-accent/20' :
+              isUpcoming ? 'ring-1 ring-gdc-accent/50' :
               isChoice && !hasPick ? 'ring-1 ring-amber-500/30' :
               isChoice && hasPick ? 'ring-1 ring-gdc-accent/30' : ''
             }`}>
               {/* Slot header */}
               <div className={`flex items-center justify-between px-3 py-1.5 border-b border-gdc-border/30 ${
-                isNow ? 'bg-green-500/10' : isUpcoming ? 'bg-gdc-accent/5' : 'bg-gdc-bg/50'
+                isNow ? 'bg-green-500/10' : isUpcoming ? 'bg-gdc-accent/15' : 'bg-gdc-bg/50'
               }`}>
                 <div className="flex items-center gap-2">
                   <span className={`text-xs font-mono font-medium ${isNow ? 'text-green-400' : ''}`}>
@@ -322,7 +322,7 @@ export function UpNextView({ sessions, userData, onUpdateUserData, onSelectSessi
                     </span>
                   )}
                   {isUpcoming && (
-                    <span className="text-[9px] font-medium text-gdc-accent/70 bg-gdc-accent/10 px-1.5 py-0.5 rounded-full">
+                    <span className="text-[9px] font-semibold text-gdc-accent bg-gdc-accent/20 px-1.5 py-0.5 rounded-full">
                       Up next
                     </span>
                   )}
