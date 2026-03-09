@@ -57,7 +57,7 @@ function GapIndicator({
   return (
     <div className="my-1">
       <div
-        className={`flex items-center gap-2 px-2 py-1 text-[10px] text-gdc-border ${hasOptions ? 'cursor-pointer hover:text-gdc-textMuted' : ''}`}
+        className={`flex items-center gap-2 px-2 py-1 text-[10px] text-gdc-textMuted/50 ${hasOptions ? 'cursor-pointer hover:text-gdc-textMuted' : ''}`}
         onClick={() => hasOptions && setExpanded(!expanded)}
       >
         <div className="flex-1 border-t border-dashed border-current opacity-30" />

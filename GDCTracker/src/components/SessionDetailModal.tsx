@@ -64,7 +64,7 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
             <span className="text-xs font-mono text-gdc-textMuted">
               {DAY_LABELS[session.day]?.split(' ')[0]} {formatTimeRange(session.startTime, session.endTime)}
             </span>
-            <span className="text-xs text-gdc-border">{duration}m</span>
+            <span className="text-xs text-gdc-textMuted/60">{duration}m</span>
           </div>
 
           {/* Title */}
@@ -78,7 +78,7 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
           {/* Format + Room */}
           <div className="flex items-center gap-2 text-xs text-gdc-textMuted">
             <span>{session.format}</span>
-            <span className="text-gdc-border">|</span>
+            <span className="text-gdc-textMuted/40">|</span>
             <span>{session.room}</span>
             <span className="text-[10px] opacity-60">({zone})</span>
           </div>

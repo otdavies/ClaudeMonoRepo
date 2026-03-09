@@ -160,7 +160,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
         </button>
 
         {/* Session count */}
-        <span className="text-[10px] text-gdc-textMuted/40 tabular-nums shrink-0">
+        <span className="text-[10px] text-gdc-textMuted/60 tabular-nums shrink-0">
           {sessionCount === totalCount
             ? `${totalCount}`
             : `${sessionCount}/${totalCount}`}
@@ -292,7 +292,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
                 })}
                 className="input w-auto text-[11px] py-1 px-2"
               />
-              <span className="text-gdc-textMuted/50 text-[10px]">to</span>
+              <span className="text-gdc-textMuted/70 text-[10px]">to</span>
               <input
                 type="time"
                 value={filters.timeRange?.end ?? '18:00'}
@@ -328,7 +328,7 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount, browseM
 function FilterSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-[10px] font-medium text-gdc-textMuted/60 uppercase tracking-wider mb-1.5 block">{label}</label>
+      <label className="text-[10px] font-medium text-gdc-textMuted/80 uppercase tracking-wider mb-1.5 block">{label}</label>
       {children}
     </div>
   )

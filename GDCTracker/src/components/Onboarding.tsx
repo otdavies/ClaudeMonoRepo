@@ -1,6 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
+import { Session, InterestLevel } from '../types'
 
-const STEPS = [
+interface StepDef {
+  title: string
+  description: string
+  visual: React.ReactNode
+}
+
+const STATIC_STEPS: StepDef[] = [
   {
     title: 'Browse Sessions',
     description: 'Explore 700+ GDC sessions by time, track, or in a compact list.',
@@ -87,10 +94,166 @@ const STEPS = [
   },
 ]
 
-export function Onboarding({ onDone }: { onDone: () => void }) {
+const TOTAL_STEPS = STATIC_STEPS.length + 1 // +1 for import step
+
+/** Normalize a string for fuzzy matching: lowercase, strip punctuation, collapse whitespace */
+function normalize(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim()
+}
+
+/** Parse .ics SUMMARY lines or plain text lines into event names */
+function parseEventNames(text: string): string[] {
+  const lines = text.split(/\r?\n/)
+  const names: string[] = []
+  for (const line of lines) {
+    // .ics SUMMARY field
+    const icsMatch = line.match(/^SUMMARY[;:](.+)/i)
+    if (icsMatch) {
+      names.push(icsMatch[1].trim())
+      continue
+    }
+    // Plain text line — skip empty or very short
+    const trimmed = line.trim()
+    if (trimmed.length > 3) {
+      names.push(trimmed)
+    }
+  }
+  return [...new Set(names)]
+}
+
+/** Match event names to sessions. Returns matched session IDs. */
+function matchSessions(eventNames: string[], sessions: Session[]): Session[] {
+  const matched: Session[] = []
+  const matchedIds = new Set<string>()
+  const normalizedNames = eventNames.map(normalize)
+
+  for (const session of sessions) {
+    if (matchedIds.has(session.id)) continue
+    const normTitle = normalize(session.title)
+
+    for (const normName of normalizedNames) {
+      // Check if either contains the other (handles partial matches)
+      if (normTitle.includes(normName) || normName.includes(normTitle)) {
+        matched.push(session)
+        matchedIds.add(session.id)
+        break
+      }
+      // Also check significant word overlap
+      const nameWords = normName.split(' ').filter(w => w.length > 3)
+      const titleWords = normTitle.split(' ').filter(w => w.length > 3)
+      if (nameWords.length >= 2 && titleWords.length >= 2) {
+        const overlap = nameWords.filter(w => titleWords.includes(w)).length
+        if (overlap >= 2 || overlap >= nameWords.length * 0.6) {
+          matched.push(session)
+          matchedIds.add(session.id)
+          break
+        }
+      }
+    }
+  }
+
+  return matched
+}
+
+function ImportStep({
+  sessions,
+  onImport,
+}: {
+  sessions: Session[]
+  onImport: (sessionIds: string[]) => void
+}) {
+  const [text, setText] = useState('')
+  const [imported, setImported] = useState(false)
+
+  const matches = useMemo(
+    () => text.trim() ? matchSessions(parseEventNames(text), sessions) : [],
+    [text, sessions]
+  )
+
+  const handleImport = () => {
+    onImport(matches.map(s => s.id))
+    setImported(true)
+  }
+
+  if (imported) {
+    return (
+      <div className="flex flex-col items-center gap-2 text-center">
+        <div className="text-2xl">&#10003;</div>
+        <p className="text-sm font-medium">
+          {matches.length} session{matches.length !== 1 ? 's' : ''} marked as interested
+        </p>
+        <p className="text-[10px] text-gdc-textMuted">You can adjust ratings later in Browse</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      <p className="text-[11px] text-gdc-textMuted leading-relaxed">
+        Paste event names from your Google Calendar, Apple Calendar, or an .ics file.
+        We'll match them to GDC sessions and mark them as interested.
+      </p>
+
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder={"Paste calendar events or .ics content here...\n\ne.g.\nNext-Gen Rendering Techniques\nAI for NPCs Workshop\nIndie Dev Meetup"}
+        className="input text-[11px] h-28 resize-none w-full"
+        rows={5}
+      />
+
+      {text.trim() && (
+        <div className="space-y-2">
+          <p className="text-[11px] text-gdc-textMuted">
+            {matches.length > 0
+              ? <>Found <span className="text-gdc-accent font-medium">{matches.length}</span> matching session{matches.length !== 1 ? 's' : ''}:</>
+              : 'No matching sessions found. Try different event names.'}
+          </p>
+
+          {matches.length > 0 && (
+            <>
+              <div className="max-h-28 overflow-y-auto space-y-1 rounded-lg bg-gdc-bg/60 p-2">
+                {matches.slice(0, 10).map(s => (
+                  <div key={s.id} className="flex items-center gap-1.5 text-[10px]">
+                    <svg className="w-3 h-3 text-gdc-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span className="truncate text-gdc-text/80">{s.title}</span>
+                  </div>
+                ))}
+                {matches.length > 10 && (
+                  <p className="text-[10px] text-gdc-textMuted pl-4.5">+{matches.length - 10} more</p>
+                )}
+              </div>
+
+              <button onClick={handleImport} className="btn-primary w-full text-xs">
+                Import {matches.length} session{matches.length !== 1 ? 's' : ''}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface Props {
+  onDone: () => void
+  sessions: Session[]
+  onUpdateUserData: (id: string, data: { interest: InterestLevel }) => void
+}
+
+export function Onboarding({ onDone, sessions, onUpdateUserData }: Props) {
   const [step, setStep] = useState(0)
-  const current = STEPS[step]
-  const isLast = step === STEPS.length - 1
+  const isImportStep = step === STATIC_STEPS.length
+  const isLast = step === TOTAL_STEPS - 1
+  const current = isImportStep ? null : STATIC_STEPS[step]
+
+  const handleImport = (sessionIds: string[]) => {
+    for (const id of sessionIds) {
+      onUpdateUserData(id, { interest: 1 })
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -98,7 +261,7 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
       <div className="relative bg-gdc-surface border border-gdc-border/50 rounded-2xl w-full max-w-sm overflow-hidden">
         {/* Progress dots */}
         <div className="flex justify-center gap-1.5 pt-5 pb-2">
-          {STEPS.map((_, i) => (
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
               key={i}
               className={`h-1 rounded-full transition-all duration-300 ${
@@ -110,15 +273,29 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
 
         {/* Content */}
         <div className="px-5 pt-3 pb-5">
-          <div className="text-center mb-5">
-            <h2 className="text-base font-bold mb-1.5">{current.title}</h2>
-            <p className="text-xs text-gdc-textMuted leading-relaxed">{current.description}</p>
-          </div>
-
-          {/* Visual — illustrative, not interactive */}
-          <div className="mb-6">
-            {current.visual}
-          </div>
+          {isImportStep ? (
+            <>
+              <div className="text-center mb-4">
+                <h2 className="text-base font-bold mb-1.5">Import from Calendar</h2>
+                <p className="text-xs text-gdc-textMuted leading-relaxed">
+                  Already have GDC events saved? Import them to get a head start.
+                </p>
+              </div>
+              <div className="mb-4">
+                <ImportStep sessions={sessions} onImport={handleImport} />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-center mb-5">
+                <h2 className="text-base font-bold mb-1.5">{current!.title}</h2>
+                <p className="text-xs text-gdc-textMuted leading-relaxed">{current!.description}</p>
+              </div>
+              <div className="mb-6">
+                {current!.visual}
+              </div>
+            </>
+          )}
 
           {/* Actions */}
           <div className="flex gap-2">
@@ -134,12 +311,12 @@ export function Onboarding({ onDone }: { onDone: () => void }) {
               onClick={() => isLast ? onDone() : setStep(step + 1)}
               className="btn-primary flex-1"
             >
-              {isLast ? 'Get Started' : 'Next'}
+              {isLast ? 'Get Started' : isImportStep ? 'Skip' : 'Next'}
             </button>
           </div>
 
           {/* Skip */}
-          {!isLast && (
+          {!isLast && !isImportStep && (
             <button
               onClick={onDone}
               className="w-full text-center text-[10px] text-gdc-textMuted/60 hover:text-gdc-textMuted mt-3 transition-colors"

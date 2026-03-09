@@ -54,7 +54,7 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
           <span className="session-time text-gdc-textMuted whitespace-nowrap">
             {formatTimeRange(session.startTime, session.endTime)}
           </span>
-          <span className="text-gdc-border text-xs">{duration}m</span>
+          <span className="text-gdc-textMuted/60 text-xs">{duration}m</span>
           <span className={`track-badge ${trackColor} hidden sm:inline-flex`}>
             {session.track}
           </span>
@@ -86,9 +86,9 @@ export const SessionCard = memo(function SessionCard({ session, userData, onUpda
       {/* Speakers + format */}
       <div className="flex items-center gap-2 text-xs text-gdc-textMuted mb-1">
         <span>{session.speakers.join(', ')}</span>
-        <span className="text-gdc-border">|</span>
+        <span className="text-gdc-textMuted/40">|</span>
         <span>{session.format}</span>
-        <span className="text-gdc-border">|</span>
+        <span className="text-gdc-textMuted/40">|</span>
         <span>{session.room}</span>
       </div>
 

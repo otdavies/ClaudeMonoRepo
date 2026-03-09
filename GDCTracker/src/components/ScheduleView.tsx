@@ -60,7 +60,7 @@ export function ScheduleView({ sessions, userData, onUpdateUserData, conflictMap
                       ? 'bg-gdc-accent text-white'
                       : count > 0
                       ? 'text-gdc-textMuted hover:text-gdc-text hover:bg-gdc-surfaceHover'
-                      : 'text-gdc-border'
+                      : 'text-gdc-textMuted/50'
                   }`}
                 >
                   {d}

@@ -13,7 +13,7 @@ export default {
           accentHover: '#818cf8',
           gold: '#f59e0b',
           text: '#e2e8f0',
-          textMuted: '#a1afc4',
+          textMuted: '#b8c7d8',
           danger: '#ef4444',
           success: '#22c55e',
         },

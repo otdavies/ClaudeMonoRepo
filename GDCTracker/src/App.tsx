@@ -141,7 +141,7 @@ export default function App() {
 
   // Show onboarding after profile setup
   if (!hasSeenOnboarding) {
-    return <Onboarding onDone={() => setHasSeenOnboarding(true)} />
+    return <Onboarding onDone={() => setHasSeenOnboarding(true)} sessions={allSessions} onUpdateUserData={updateUserData} />
   }
 
   return (
@@ -309,7 +309,7 @@ export default function App() {
       <InstallPrompt />
 
       {/* Footer */}
-      <footer className="border-t border-gdc-border/30 py-2 text-center text-[10px] text-gdc-textMuted/50">
+      <footer className="border-t border-gdc-border/30 py-2 text-center text-[10px] text-gdc-textMuted/70">
         Real GDC 2026 schedule data · Last updated Mar 8, 2026 · {officialSessions.length} sessions{showSideEvents && ` + ${sideEvents.length} side events`}
       </footer>
     </div>
