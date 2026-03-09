@@ -28,7 +28,7 @@ export const InterestRating = memo(function InterestRating({ level, onChange, co
             className={`star-btn rounded-md transition-all duration-150 ${compact ? 'p-1' : 'p-1.5'} ${
               filled
                 ? `${color} ${bg}`
-                : 'text-gdc-border/40 hover:text-gdc-textMuted/60'
+                : 'text-gdc-textMuted/50 hover:text-gdc-textMuted/80'
             }`}
             title={label}
             aria-label={`Set interest to ${label}`}
@@ -38,7 +38,7 @@ export const InterestRating = memo(function InterestRating({ level, onChange, co
               viewBox="0 0 24 24"
               fill={filled ? 'currentColor' : 'none'}
               stroke="currentColor"
-              strokeWidth={filled ? '0' : '1.5'}
+              strokeWidth={filled ? '0' : '2'}
             >
               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
             </svg>
