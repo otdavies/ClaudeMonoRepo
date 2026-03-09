@@ -106,14 +106,24 @@ export function SessionDetailModal({ session, userData, onUpdateUserData, onClos
           )}
 
           {/* Description */}
-          <p className="text-sm text-gdc-textMuted leading-relaxed">{session.description}</p>
+          <p className="text-sm text-gdc-textMuted leading-relaxed whitespace-pre-line">
+            {session.description.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+              /^https?:\/\//.test(part)
+                ? <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-gdc-accent hover:underline break-all">{part}</a>
+                : part
+            )}
+          </p>
 
           {/* Tags */}
           {session.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {session.tags.map(tag => (
-                <span key={tag} className="text-[10px] px-1.5 py-0.5 rounded bg-gdc-bg text-gdc-textMuted">
-                  {tag}
+                <span key={tag} className={`text-[10px] px-1.5 py-0.5 rounded ${
+                  tag === 'side-event' ? 'bg-amber-500/20 text-amber-400 font-medium' :
+                  tag === 'free' ? 'bg-green-500/15 text-green-400' :
+                  'bg-gdc-bg text-gdc-textMuted'
+                }`}>
+                  {tag === 'side-event' ? 'Community Event' : tag}
                 </span>
               ))}
             </div>

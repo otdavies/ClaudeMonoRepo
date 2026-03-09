@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { sessions as allSessions } from './data/sessions'
+import { sessions as officialSessions } from './data/sessions'
+import { sideEvents, sideEventsToSessions } from './data/sideEvents'
 import { Session, FilterState, UserSessionData, ViewMode, InterestLevel } from './types'
 import { applyFilters } from './utils/filters'
 import { getScheduleConflicts } from './utils/conflicts'
@@ -46,6 +47,14 @@ export default function App() {
   const [swipeMode, setSwipeMode] = useState(false)
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
   const [hasSeenOnboarding, setHasSeenOnboarding] = useLocalStorage<boolean>('gdc2026-onboarded', false)
+  const [showSideEvents, setShowSideEvents] = useLocalStorage<boolean>('gdc2026-side-events', false)
+
+  // Merge official + side events based on toggle
+  const sideEventSessions = useMemo(() => sideEventsToSessions(sideEvents), [])
+  const allSessions = useMemo(
+    () => showSideEvents ? [...officialSessions, ...sideEventSessions] : officialSessions,
+    [showSideEvents, sideEventSessions]
+  )
 
   // User profile (name + color)
   const { profile, saveProfile } = useProfile()
@@ -120,7 +129,7 @@ export default function App() {
   const selectSession = useCallback((id: string) => {
     const s = allSessions.find(s => s.id === id)
     if (s) setSelectedSession(s)
-  }, [])
+  }, [allSessions])
 
   const scheduledCount = scheduledSessions.length
 
@@ -145,6 +154,18 @@ export default function App() {
               <span className="text-[10px] text-gdc-textMuted/70 hidden sm:inline">Mar 9–13 · San Francisco</span>
             </div>
             <div className="flex items-center gap-1.5">
+              {/* Side events toggle */}
+              <button
+                onClick={() => setShowSideEvents(!showSideEvents)}
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium transition-colors ${
+                  showSideEvents
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'text-gdc-textMuted/60 hover:text-gdc-textMuted'
+                }`}
+                title={showSideEvents ? 'Hide community side events' : 'Show community side events (parties, meetups, mixers)'}
+              >
+                {showSideEvents ? `+${sideEvents.length} events` : 'Side events'}
+              </button>
               {'Notification' in window && Notification.permission !== 'granted' && (
                 <button
                   onClick={requestPermission}
@@ -287,7 +308,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="border-t border-gdc-border/30 py-2 text-center text-[10px] text-gdc-textMuted/50">
-        Real GDC 2026 schedule data · Last updated Mar 8, 2026 · {allSessions.length} sessions
+        Real GDC 2026 schedule data · Last updated Mar 8, 2026 · {officialSessions.length} sessions{showSideEvents && ` + ${sideEvents.length} side events`}
       </footer>
     </div>
   )

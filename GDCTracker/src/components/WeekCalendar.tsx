@@ -15,7 +15,7 @@ const HOUR_HEIGHT = 60
 const START_HOUR = 9
 const END_HOUR = 18
 
-export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) {
+export function WeekCalendar({ sessions, userData, conflictMap, onSelectSession }: Props) {
   const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR + i)
 
   const scheduledByDay = new Map<Day, Session[]>()
@@ -93,7 +93,31 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
                 ))}
 
                 {/* Sessions */}
-                {(scheduledByDay.get(day) ?? []).map(session => {
+                {/* Non-picked sessions (behind, dimmed) */}
+                {(scheduledByDay.get(day) ?? []).filter(s => !userData[s.id]?.picked).map(session => {
+                  const startMin = timeToMinutes(session.startTime) - START_HOUR * 60
+                  const duration = getDurationMinutes(session.startTime, session.endTime)
+                  const top = (startMin / 60) * HOUR_HEIGHT
+                  const height = Math.max((duration / 60) * HOUR_HEIGHT - 2, 20)
+                  const trackColor = TRACK_COLORS[session.track]
+                  const bgClass = trackColor.split(' ')[0]
+
+                  return (
+                    <div
+                      key={session.id}
+                      className={`absolute left-0.5 right-0.5 rounded p-1 text-[10px] leading-tight
+                        cursor-pointer overflow-hidden hover:opacity-60
+                        opacity-20 ${bgClass}`}
+                      style={{ top, height, zIndex: 1 }}
+                      onClick={() => onSelectSession?.(session.id)}
+                      title={`${session.title}\n${formatTime(session.startTime)}-${formatTime(session.endTime)}\n${session.room}`}
+                    >
+                      <p className="font-medium truncate">{session.title}</p>
+                    </div>
+                  )
+                })}
+                {/* Picked sessions (on top, prominent) */}
+                {(scheduledByDay.get(day) ?? []).filter(s => userData[s.id]?.picked).map(session => {
                   const startMin = timeToMinutes(session.startTime) - START_HOUR * 60
                   const duration = getDurationMinutes(session.startTime, session.endTime)
                   const top = (startMin / 60) * HOUR_HEIGHT
@@ -106,9 +130,9 @@ export function WeekCalendar({ sessions, conflictMap, onSelectSession }: Props) 
                     <div
                       key={session.id}
                       className={`absolute left-0.5 right-0.5 rounded p-1 text-[10px] leading-tight
-                        cursor-pointer overflow-hidden hover:brightness-125
-                        ${hasConflict ? 'bg-red-500/20 ring-1 ring-red-500/50' : bgClass}`}
-                      style={{ top, height }}
+                        cursor-pointer overflow-hidden hover:brightness-125 ring-1
+                        ${hasConflict ? 'bg-red-500/30 ring-red-500/60' : `${bgClass} ring-white/20`}`}
+                      style={{ top, height, zIndex: 10 }}
                       onClick={() => onSelectSession?.(session.id)}
                       title={`${session.title}\n${formatTime(session.startTime)}-${formatTime(session.endTime)}\n${session.room}`}
                     >
