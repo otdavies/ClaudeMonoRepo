@@ -1,7 +1,9 @@
+import { useMemo } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, TRACK_COLORS } from '../types'
 import { formatTime, timeToMinutes, getDurationMinutes } from '../utils/conflicts'
 import { InterestRating } from './InterestRating'
 import { InterestLevel } from '../types'
+import { getWalkWarnings, getZoneLabel } from '../utils/location'
 
 interface Props {
   day: Day
@@ -25,9 +27,39 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
   // Detect overlapping groups for column layout
   const columns = assignColumns(daySessions)
 
+  // Walk warnings for consecutive sessions on this day
+  const dayWalkWarnings = useMemo(
+    () => getWalkWarnings(daySessions),
+    [daySessions]
+  )
+
   return (
     <div>
       <h2 className="text-sm font-semibold text-gdc-accent mb-3">{DAY_LABELS[day]}</h2>
+
+      {/* Walk warnings for this day */}
+      {dayWalkWarnings.length > 0 && (
+        <div className="space-y-1 mb-3">
+          {dayWalkWarnings.map((w, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] ${
+                w.tight
+                  ? 'bg-red-500/10 border border-red-500/30 text-red-400'
+                  : 'bg-amber-500/10 border border-amber-500/30 text-amber-400'
+              }`}
+            >
+              <span className="font-medium shrink-0">
+                {w.tight ? '!!' : '!'} {formatTime(w.fromSession.endTime)}→{formatTime(w.toSession.startTime)}
+              </span>
+              <span className="text-gdc-textMuted truncate">
+                {getZoneLabel(w.fromSession.room)} → {getZoneLabel(w.toSession.room)} ~{w.walkMinutes}min walk, {w.gapMinutes}min gap
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       {daySessions.length === 0 ? (
         <p className="text-sm text-gdc-textMuted py-4">No sessions starred for this day</p>
       ) : (

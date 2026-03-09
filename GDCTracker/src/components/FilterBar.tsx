@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FilterState, Track, SessionFormat, Day, ALL_TRACKS, ALL_FORMATS, ALL_DAYS, DAY_LABELS, TRACK_COLORS, InterestLevel } from '../types'
+import type { BrowseMode } from './SessionList'
 
 interface Props {
   filters: FilterState
@@ -7,8 +8,6 @@ interface Props {
   sessionCount: number
   totalCount: number
 }
-
-type SortMode = 'time' | 'track' | 'interest'
 
 export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props) {
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -223,17 +222,42 @@ export function FilterBar({ filters, onUpdate, sessionCount, totalCount }: Props
   )
 }
 
-export function SortControl({ value, onChange }: { value: SortMode; onChange: (v: SortMode) => void }) {
+const BROWSE_MODE_LABELS: Record<BrowseMode, string> = {
+  timeline: 'Timeline',
+  tracks: 'Tracks',
+  compact: 'Compact',
+}
+
+const BROWSE_MODE_ICONS: Record<BrowseMode, React.ReactNode> = {
+  timeline: (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeWidth="2" d="M12 8v4l3 3M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+    </svg>
+  ),
+  tracks: (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeWidth="2" d="M4 6h16M4 12h10M4 18h6" />
+    </svg>
+  ),
+  compact: (
+    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeWidth="2" d="M3 5h18M3 10h18M3 15h18M3 20h18" />
+    </svg>
+  ),
+}
+
+export function BrowseModeControl({ value, onChange }: { value: BrowseMode; onChange: (v: BrowseMode) => void }) {
   return (
     <div className="flex items-center gap-1 text-xs">
-      <span className="text-gdc-textMuted">Sort:</span>
-      {(['time', 'track', 'interest'] as const).map(s => (
+      <span className="text-gdc-textMuted">View:</span>
+      {(['timeline', 'tracks', 'compact'] as const).map(m => (
         <button
-          key={s}
-          onClick={() => onChange(s)}
-          className={value === s ? 'tab-active text-xs px-2 py-1' : 'tab-inactive text-xs px-2 py-1'}
+          key={m}
+          onClick={() => onChange(m)}
+          className={`${value === m ? 'tab-active' : 'tab-inactive'} text-xs px-2 py-1 flex items-center gap-1`}
         >
-          {s.charAt(0).toUpperCase() + s.slice(1)}
+          {BROWSE_MODE_ICONS[m]}
+          <span className="hidden sm:inline">{BROWSE_MODE_LABELS[m]}</span>
         </button>
       ))}
     </div>

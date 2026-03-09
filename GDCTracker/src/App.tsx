@@ -1,11 +1,12 @@
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { sessions as allSessions } from './data/sessions'
 import { FilterState, UserSessionData, ViewMode, InterestLevel } from './types'
-import { applyFilters, sortSessions } from './utils/filters'
+import { applyFilters } from './utils/filters'
 import { getScheduleConflicts } from './utils/conflicts'
 import { useLocalStorage } from './hooks/useLocalStorage'
-import { FilterBar, SortControl } from './components/FilterBar'
+import { FilterBar, BrowseModeControl } from './components/FilterBar'
 import { SessionList } from './components/SessionList'
+import type { BrowseMode } from './components/SessionList'
 import { ScheduleView } from './components/ScheduleView'
 import { UpNextView } from './components/UpNextView'
 import { ClaudeAssistant } from './components/ClaudeAssistant'
@@ -35,7 +36,7 @@ function useDebouncedValue<T>(value: T, delay: number): T {
 export default function App() {
   const [view, setView] = useState<ViewMode>('browse')
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS)
-  const [sortBy, setSortBy] = useState<'time' | 'track' | 'interest'>('time')
+  const [browseMode, setBrowseMode] = useState<BrowseMode>('timeline')
   const [userData, setUserData] = useLocalStorage<Record<string, UserSessionData>>('gdc2026-user-data', {})
 
   // Session reminders via notifications
@@ -78,7 +79,7 @@ export default function App() {
     [debouncedFilters]
   )
 
-  // Apply userData-dependent filters and sorting only when needed
+  // Apply userData-dependent filters (sorting handled by each browse mode)
   const filteredSessions = useMemo(() => {
     let result = baseFilteredSessions
 
@@ -90,8 +91,8 @@ export default function App() {
       result = result.filter(s => (userData[s.id]?.interest ?? 0) > 0)
     }
 
-    return sortSessions(result, sortBy, userData)
-  }, [baseFilteredSessions, filters.interestMin, filters.scheduledOnly, sortBy, userData])
+    return result
+  }, [baseFilteredSessions, filters.interestMin, filters.scheduledOnly, userData])
 
   const scheduledCount = scheduledSessions.length
 
@@ -161,13 +162,13 @@ export default function App() {
               sessionCount={filteredSessions.length}
               totalCount={allSessions.length}
             />
-            <SortControl value={sortBy} onChange={setSortBy} />
+            <BrowseModeControl value={browseMode} onChange={setBrowseMode} />
             <SessionList
               sessions={filteredSessions}
               userData={userData}
               onUpdateUserData={updateUserData}
               conflictMap={conflictMap}
-              groupByDay={sortBy === 'time'}
+              browseMode={browseMode}
             />
           </div>
         )}
