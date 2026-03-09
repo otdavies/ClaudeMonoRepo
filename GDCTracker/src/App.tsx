@@ -9,7 +9,6 @@ import { SessionList } from './components/SessionList'
 import type { BrowseMode } from './components/SessionList'
 import { ScheduleView } from './components/ScheduleView'
 import { UpNextView } from './components/UpNextView'
-import { ClaudeAssistant } from './components/ClaudeAssistant'
 import { SwipeView } from './components/SwipeView'
 import { useNotifications } from './hooks/useNotifications'
 
@@ -132,7 +131,6 @@ export default function App() {
               ['schedule', 'Schedule'],
               ['up-next', 'Up Next'],
               ['swipe', 'Swipe'],
-              ['claude', 'Claude'],
             ] as const).map(([v, label]) => (
               <button
                 key={v}
@@ -200,12 +198,6 @@ export default function App() {
           />
         )}
 
-        {view === 'claude' && (
-          <ClaudeAssistant
-            sessions={allSessions}
-            userData={userData}
-          />
-        )}
       </main>
 
       {/* Footer */}

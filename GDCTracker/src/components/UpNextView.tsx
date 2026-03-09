@@ -53,8 +53,8 @@ export function UpNextView({ sessions, userData, onUpdateUserData }: Props) {
   )
 
   const walkWarnings = useMemo(
-    () => getWalkWarnings(starredSessions),
-    [starredSessions]
+    () => getWalkWarnings(starredSessions, userData),
+    [starredSessions, userData]
   )
 
   // Index warnings by the "to" session for easy lookup between slots

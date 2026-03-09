@@ -29,8 +29,8 @@ export function DaySchedule({ day, sessions, userData, onUpdateUserData, conflic
 
   // Walk warnings for consecutive sessions on this day
   const dayWalkWarnings = useMemo(
-    () => getWalkWarnings(daySessions),
-    [daySessions]
+    () => getWalkWarnings(daySessions, userData),
+    [daySessions, userData]
   )
 
   return (

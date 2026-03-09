@@ -132,11 +132,52 @@ export interface WalkWarning {
   tight: boolean
 }
 
+interface ChoiceSlot {
+  sessions: Session[]
+  startTime: string
+  endTime: string
+}
+
 /**
- * Check consecutive starred sessions for tight transitions.
- * Now considers room-level granularity, not just building zones.
+ * Group overlapping sessions into "choice slots" — you only attend one per slot.
  */
-export function getWalkWarnings(starredSessions: Session[]): WalkWarning[] {
+function groupIntoSlots(sorted: Session[]): ChoiceSlot[] {
+  const slots: ChoiceSlot[] = []
+  for (const s of sorted) {
+    const last = slots[slots.length - 1]
+    if (last && timeToMinutes(s.startTime) < timeToMinutes(last.endTime)) {
+      last.sessions.push(s)
+      if (s.endTime > last.endTime) last.endTime = s.endTime
+    } else {
+      slots.push({ sessions: [s], startTime: s.startTime, endTime: s.endTime })
+    }
+  }
+  return slots
+}
+
+/**
+ * Pick representative session for a choice slot — the one you'll most likely attend.
+ * Highest interest wins; ties broken by earliest start.
+ */
+function slotRepresentative(slot: ChoiceSlot, userData?: Record<string, { interest?: number }>): Session {
+  if (slot.sessions.length === 1) return slot.sessions[0]
+  return [...slot.sessions].sort((a, b) => {
+    const ai = userData?.[a.id]?.interest ?? 0
+    const bi = userData?.[b.id]?.interest ?? 0
+    if (bi !== ai) return bi - ai
+    return a.startTime.localeCompare(b.startTime)
+  })[0]
+}
+
+/**
+ * Check transitions between non-overlapping session groups for tight walks.
+ * Overlapping sessions are choices (you attend one), not sequential commitments.
+ * Uses highest-starred session per group as the likely pick for distance.
+ */
+export function getWalkWarnings(
+  starredSessions: Session[],
+  userData?: Record<string, { interest?: number }>
+): WalkWarning[] {
   const warnings: WalkWarning[] = []
 
   const byDay = new Map<string, Session[]>()
@@ -146,22 +187,25 @@ export function getWalkWarnings(starredSessions: Session[]): WalkWarning[] {
   }
 
   for (const [, daySessions] of byDay) {
-    const sorted = daySessions.sort((a, b) => a.startTime.localeCompare(b.startTime))
+    const sorted = [...daySessions].sort((a, b) => a.startTime.localeCompare(b.startTime))
+    const slots = groupIntoSlots(sorted)
 
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const current = sorted[i]
-      const next = sorted[i + 1]
+    for (let i = 0; i < slots.length - 1; i++) {
+      const fromSlot = slots[i]
+      const toSlot = slots[i + 1]
 
-      const walkTime = estimateWalkTime(parseRoom(current.room), parseRoom(next.room))
-      if (walkTime <= 1) continue // adjacent rooms, no warning needed
+      const fromSession = slotRepresentative(fromSlot, userData)
+      const toSession = slotRepresentative(toSlot, userData)
 
-      const gapMinutes = timeToMinutes(next.startTime) - timeToMinutes(current.endTime)
+      const walkTime = estimateWalkTime(parseRoom(fromSession.room), parseRoom(toSession.room))
+      if (walkTime <= 1) continue
 
-      // Warn if gap is less than walk time + 3 min buffer
+      const gapMinutes = timeToMinutes(toSlot.startTime) - timeToMinutes(fromSlot.endTime)
+
       if (gapMinutes < walkTime + 3) {
         warnings.push({
-          fromSession: current,
-          toSession: next,
+          fromSession,
+          toSession,
           walkMinutes: walkTime,
           gapMinutes: Math.max(0, gapMinutes),
           tight: gapMinutes < walkTime,
