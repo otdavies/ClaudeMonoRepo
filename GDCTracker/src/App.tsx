@@ -10,6 +10,7 @@ import type { BrowseMode } from './components/SessionList'
 import { ScheduleView } from './components/ScheduleView'
 import { UpNextView } from './components/UpNextView'
 import { ClaudeAssistant } from './components/ClaudeAssistant'
+import { SwipeView } from './components/SwipeView'
 import { useNotifications } from './hooks/useNotifications'
 
 const DEFAULT_FILTERS: FilterState = {
@@ -130,6 +131,7 @@ export default function App() {
               ['browse', 'Browse'],
               ['schedule', 'Schedule'],
               ['up-next', 'Up Next'],
+              ['swipe', 'Swipe'],
               ['claude', 'Claude'],
             ] as const).map(([v, label]) => (
               <button
@@ -184,6 +186,14 @@ export default function App() {
 
         {view === 'up-next' && (
           <UpNextView
+            sessions={allSessions}
+            userData={userData}
+            onUpdateUserData={updateUserData}
+          />
+        )}
+
+        {view === 'swipe' && (
+          <SwipeView
             sessions={allSessions}
             userData={userData}
             onUpdateUserData={updateUserData}

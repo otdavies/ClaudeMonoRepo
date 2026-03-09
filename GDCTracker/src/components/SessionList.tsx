@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef, startTransition, useMemo } from 'react'
+import { useState, useCallback, useEffect, useRef, startTransition, useMemo, memo } from 'react'
 import { Session, UserSessionData, Day, DAY_LABELS, Track, TRACK_COLORS, InterestLevel } from '../types'
 import { SessionCard, DEFAULT_USER_DATA } from './SessionCard'
 import { formatTime } from '../utils/conflicts'
@@ -188,6 +188,87 @@ function TracksView({ sessions, userData, onUpdateUserData, conflictMap }: Omit<
 
 // ─── Compact view (dense scannable rows) ───────────────────────────
 
+function CompactRow({ s, interest, isStarred, hasConflict, trackColor, onUpdateUserData }: {
+  s: Session
+  interest: InterestLevel
+  isStarred: boolean
+  hasConflict: boolean
+  trackColor: string
+  onUpdateUserData: (id: string, data: Partial<UserSessionData>) => void
+}) {
+  // Quick-star: tap row on mobile to toggle 1 star
+  const handleRowTap = useCallback((e: React.MouseEvent) => {
+    // Don't fire if they tapped a star button
+    if ((e.target as HTMLElement).closest('.star-btn')) return
+    // Only on mobile (sm breakpoint handled by CSS for desktop stars)
+    if (window.innerWidth >= 640) return
+    onUpdateUserData(s.id, { interest: isStarred ? 0 : 1 as InterestLevel })
+  }, [s.id, isStarred, onUpdateUserData])
+
+  return (
+    <div
+      className={`grid grid-cols-[2.5rem_1fr_auto] sm:grid-cols-[4.5rem_1fr_7rem_4.5rem] gap-1.5 sm:gap-2 items-center px-2 py-1.5 text-xs hover:bg-gdc-surfaceHover active:bg-gdc-surfaceHover cursor-pointer select-none ${
+        isStarred ? 'bg-gdc-accent/5' : ''
+      } ${hasConflict && isStarred ? 'bg-red-500/5' : ''}`}
+      onClick={handleRowTap}
+    >
+      {/* Time */}
+      <span className="font-mono text-gdc-textMuted text-[11px] whitespace-nowrap">
+        <span className="sm:hidden">{formatTime(s.startTime).replace(/\s*(AM|PM)/, '').replace(':', '')}</span>
+        <span className="hidden sm:inline">{s.day} {formatTime(s.startTime).replace(' ', '')}</span>
+      </span>
+
+      {/* Title + meta */}
+      <div className="min-w-0">
+        <p className={`truncate font-medium text-[13px] leading-tight ${isStarred ? 'text-gdc-text' : 'text-gdc-textMuted'}`}>
+          {s.title}
+        </p>
+        <p className="truncate text-[10px] text-gdc-textMuted leading-tight">
+          {s.speakers.length > 0 ? s.speakers[0] : s.format}
+          <span className="hidden sm:inline"> | {s.format} | {s.room}</span>
+          <span className="sm:hidden"> · {s.room.split(',')[0]}</span>
+        </p>
+      </div>
+
+      {/* Mobile: compact star indicator */}
+      <div className="sm:hidden flex items-center gap-0.5">
+        {([1, 2, 3] as const).map(n => (
+          <button
+            key={n}
+            onClick={e => {
+              e.stopPropagation()
+              onUpdateUserData(s.id, { interest: (interest === n ? 0 : n) as InterestLevel })
+            }}
+            className={`star-btn text-sm p-0.5 ${
+              n <= interest
+                ? n === 3 ? 'text-red-400' : n === 2 ? 'text-gdc-gold' : 'text-gdc-textMuted'
+                : 'text-gdc-border'
+            }`}
+          >
+            {n <= interest ? '\u2605' : '\u2606'}
+          </button>
+        ))}
+      </div>
+
+      {/* Desktop: track badge */}
+      <span className={`track-badge ${trackColor} text-[10px] hidden sm:inline-flex w-fit`}>
+        {s.track.length > 14 ? s.track.split(/[\s&]+/).map(w => w[0]).join('') : s.track}
+      </span>
+
+      {/* Desktop: full interest rating */}
+      <div className="hidden sm:flex justify-end">
+        <InterestRating
+          level={interest}
+          onChange={v => onUpdateUserData(s.id, { interest: v as InterestLevel })}
+          compact
+        />
+      </div>
+    </div>
+  )
+}
+
+const MemoCompactRow = memo(CompactRow)
+
 function CompactView({ sessions, userData, onUpdateUserData, conflictMap }: Omit<Props, 'browseMode'>) {
   const [visibleCount, setVisibleCount] = useState(60)
   const sentinelRef = useRef<HTMLDivElement>(null)
@@ -220,42 +301,16 @@ function CompactView({ sessions, userData, onUpdateUserData, conflictMap }: Omit
       <div className="divide-y divide-gdc-border/30">
         {visible.map(s => {
           const interest = userData[s.id]?.interest ?? 0
-          const isStarred = interest > 0
-          const hasConflict = (conflictMap.get(s.id) ?? []).length > 0
-          const trackColor = TRACK_COLORS[s.track]
-
           return (
-            <div
+            <MemoCompactRow
               key={s.id}
-              className={`grid grid-cols-[4.5rem_1fr] sm:grid-cols-[4.5rem_1fr_7rem_4.5rem] gap-2 items-center px-2 py-1.5 text-xs hover:bg-gdc-surfaceHover ${
-                isStarred ? 'bg-gdc-accent/5' : ''
-              } ${hasConflict && isStarred ? 'bg-red-500/5' : ''}`}
-            >
-              <span className="font-mono text-gdc-textMuted text-[11px] whitespace-nowrap">
-                {s.day} {formatTime(s.startTime).replace(' ', '')}
-              </span>
-
-              <div className="min-w-0">
-                <p className={`truncate font-medium ${isStarred ? 'text-gdc-text' : 'text-gdc-textMuted'}`}>
-                  {s.title}
-                </p>
-                <p className="truncate text-[10px] text-gdc-textMuted">
-                  {s.speakers.join(', ')} | {s.format} | {s.room}
-                </p>
-              </div>
-
-              <span className={`track-badge ${trackColor} text-[10px] hidden sm:inline-flex w-fit`}>
-                {s.track.length > 14 ? s.track.split(/[\s&]+/).map(w => w[0]).join('') : s.track}
-              </span>
-
-              <div className="hidden sm:flex justify-end">
-                <InterestRating
-                  level={interest}
-                  onChange={v => onUpdateUserData(s.id, { interest: v as InterestLevel })}
-                  compact
-                />
-              </div>
-            </div>
+              s={s}
+              interest={interest}
+              isStarred={interest > 0}
+              hasConflict={(conflictMap.get(s.id) ?? []).length > 0}
+              trackColor={TRACK_COLORS[s.track]}
+              onUpdateUserData={onUpdateUserData}
+            />
           )
         })}
       </div>
