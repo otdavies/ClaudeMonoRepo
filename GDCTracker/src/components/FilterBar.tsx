@@ -275,7 +275,7 @@ const BROWSE_TABS: { key: BrowseTab; label: string; accent?: boolean }[] = [
   { key: 'timeline', label: 'Timeline' },
   { key: 'tracks', label: 'Tracks' },
   { key: 'compact', label: 'Compact' },
-  { key: 'swipe', label: 'Rate All', accent: true },
+  { key: 'swipe', label: 'Swipe', accent: true },
 ]
 
 export function BrowseModeControl({
